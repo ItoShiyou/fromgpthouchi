@@ -18,6 +18,9 @@ final saveRepositoryProvider = Provider<SaveRepository>(
   (ref) => throw UnimplementedError('override in main()'),
 );
 
+/// 起動時に読み込んだセーブ（無ければ null＝はじめから）。main() で override する。
+final initialGameStateProvider = Provider<GameState?>((ref) => null);
+
 final gameProvider = NotifierProvider<GameController, GameState>(
   GameController.new,
 );
@@ -107,7 +110,8 @@ class GameController extends Notifier<GameState> {
     _repo = ref.watch(saveRepositoryProvider);
     _idle = IdleEngine(_content);
     _gacha = GachaEngine(_content.gacha);
-    return _repo.load() ?? GameState.initial(_content, DateTime.now());
+    return ref.watch(initialGameStateProvider) ??
+        GameState.initial(_content, DateTime.now());
   }
 
   TitleContent get content => _content;
@@ -320,4 +324,7 @@ class GameController extends Notifier<GameState> {
   }
 
   String exportSave() => _repo.export(state);
+
+  /// 書きかけの保存を終わらせる（アプリが裏に回る時）。
+  Future<void> flush() => _repo.flush();
 }
