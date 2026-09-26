@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/brand/handdrawn.dart';
+
 import '../../core/brand/theme.dart';
 import '../../core/state/game_controller.dart';
 import '../../titles/yoru_kissa/cafe_scene.dart';
@@ -321,8 +323,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             const SizedBox(height: 14),
             Row(
               children: [
-                Text(content.menu(guest.visit.menuId).icon),
-                const SizedBox(width: 6),
                 Text(
                   content.menu(guest.visit.menuId).name,
                   style: const TextStyle(color: YohakuColors.inkDim),
@@ -345,7 +345,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     Navigator.of(ctx).pop();
                     _push(VisitorDetailScreen(visitorId: id));
                   },
-                  child: const Text('この人のこと ›'),
+                  child: const Text('この人のこと'),
                 ),
               ),
           ],
@@ -368,9 +368,9 @@ class _LevelCard extends StatelessWidget {
     return Container(
       width: 132,
       padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: _glass,
-        borderRadius: BorderRadius.circular(12),
+        shape: RoughBorder(radius: 12),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -423,9 +423,9 @@ class _HudPill extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(top: 6),
       padding: const EdgeInsets.fromLTRB(4, 3, 10, 3),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: _glass,
-        borderRadius: BorderRadius.circular(20),
+        shape: RoughBorder(radius: 20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -455,10 +455,12 @@ class _GlassChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: _glass,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: YohakuColors.lamp.withValues(alpha: 0.6)),
+        shape: RoughBorder(
+          radius: 20,
+          side: BorderSide(color: YohakuColors.lamp.withValues(alpha: 0.6)),
+        ),
       ),
       child: Text(
         label,
@@ -483,9 +485,9 @@ class _RegisterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: YohakuColors.paper.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(16),
+        shape: RoughBorder(radius: 16),
       ),
       child: Row(
         children: [
@@ -537,12 +539,11 @@ class _BarButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 3),
         child: Material(
           color: _glass,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+          shape: RoughBorder(
+            radius: 12,
             side: BorderSide(color: YohakuColors.cream.withValues(alpha: 0.55)),
           ),
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
             onTap: onTap,
             child: SizedBox(
               height: 58,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app.dart';
+import '../../core/brand/handdrawn.dart';
 import '../../core/brand/theme.dart';
 import '../../titles/yoru_kissa/exterior_painter.dart';
 import '../home/home_screen.dart';
@@ -36,6 +37,7 @@ class _TitleScreenState extends State<TitleScreen>
           Positioned.fill(
             child: CustomPaint(painter: ExteriorPainter(animation: _anim)),
           ),
+          const Positioned.fill(child: PaperGrain(dark: true, opacity: 1.2)),
           // 下の方を暗くして文字を読みやすく
           const Positioned.fill(
             child: DecoratedBox(

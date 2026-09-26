@@ -27,39 +27,16 @@ class MenuScreen extends ConsumerWidget {
             .toList();
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(14, 0, 14, 20),
-          itemCount: menus.length + 1,
+          itemCount: menus.length,
           separatorBuilder: (_, _) => const Divider(height: 1),
           itemBuilder: (context, i) {
-            if (i == menus.length) {
-              return const Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: Text(
-                  '好きなものがメニューにあると、その人は少し来やすくなります。',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 11, color: YohakuColors.inkDim),
-                ),
-              );
-            }
             final m = menus[i];
             final owned = s.ownedMenus.contains(m.id);
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
                 children: [
-                  Container(
-                    width: 54,
-                    height: 54,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: YohakuColors.paperLine),
-                    ),
-                    child: Opacity(
-                      opacity: owned ? 1 : 0.35,
-                      child: Text(m.icon, style: const TextStyle(fontSize: 28)),
-                    ),
-                  ),
+                  IconTile(m.icon, size: 50, locked: !owned),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

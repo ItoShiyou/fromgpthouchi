@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/brand/handdrawn.dart';
 import '../../core/brand/theme.dart';
 import '../../core/state/game_controller.dart';
 import '../../core/state/game_state.dart';
@@ -21,8 +22,15 @@ class EventDialog extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 22),
         child: Material(
           color: YohakuColors.paper,
-          borderRadius: BorderRadius.circular(20),
-          elevation: 8,
+          shape: RoughBorder(
+            radius: 12,
+            amount: 0.9,
+            side: BorderSide(
+              color: YohakuColors.ink.withValues(alpha: 0.4),
+              width: 1.2,
+            ),
+          ),
+          elevation: 6,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(22, 18, 22, 14),
             child: Column(
@@ -31,19 +39,9 @@ class EventDialog extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.auto_awesome,
-                      size: 16,
-                      color: YohakuColors.lamp,
-                    ),
-                    const SizedBox(width: 6),
-                    const Text(
-                      '特別な出来事',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: YohakuColors.wood,
-                      ),
+                    Text(
+                      'できごと',
+                      style: YohakuText.heading(13, color: YohakuColors.wood),
                     ),
                     const Spacer(),
                     Text(
@@ -63,11 +61,14 @@ class EventDialog extends ConsumerWidget {
                 if (last)
                   const Padding(
                     padding: EdgeInsets.only(top: 8),
-                    child: Text(
-                      '― この出来事を、最後まで見届けました。',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: YohakuColors.inkDim,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '（おしまい）',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: YohakuColors.inkDim,
+                        ),
                       ),
                     ),
                   ),

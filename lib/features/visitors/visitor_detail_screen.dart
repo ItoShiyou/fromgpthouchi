@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/brand/handdrawn.dart';
+
 import '../../core/brand/theme.dart';
 import '../../core/models/world.dart';
 import '../../core/state/game_controller.dart';
@@ -117,9 +119,9 @@ class _VisitorDetailScreenState extends ConsumerState<VisitorDetailScreen> {
                 Expanded(
                   child: Container(
                     margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: YohakuColors.paper,
-                      borderRadius: BorderRadius.circular(22),
+                      shape: RoughBorder(radius: 22),
                     ),
                     child: Column(
                       children: [
@@ -167,7 +169,7 @@ class _VisitorDetailScreenState extends ConsumerState<VisitorDetailScreen> {
           ),
         if (met && next != null)
           Text(
-            'あと $next 回来てくれたら、何かわかるかもしれない。',
+            '（まだ、それくらいしか知らない）',
             style: const TextStyle(fontSize: 12, color: YohakuColors.inkDim),
           ),
         if (met) ...[
@@ -241,10 +243,12 @@ class _VisitorDetailScreenState extends ConsumerState<VisitorDetailScreen> {
       children: [
         const SectionTitle('発見した出来事'),
         Container(
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: Colors.white.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: YohakuColors.paperLine),
+            shape: RoughBorder(
+              radius: 12,
+              side: BorderSide(color: YohakuColors.paperLine),
+            ),
           ),
           child: Column(
             children: [
@@ -259,7 +263,7 @@ class _VisitorDetailScreenState extends ConsumerState<VisitorDetailScreen> {
                   done: true,
                 ),
               for (var i = 0; i < remaining; i++)
-                const _TimelineRow(day: null, text: '……', done: false),
+                const _TimelineRow(day: null, text: '', done: false),
             ],
           ),
         ),
@@ -283,18 +287,9 @@ class _TimelineRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: YohakuColors.paperLine)),
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            done ? Icons.check : Icons.lock_outline,
-            size: 14,
-            color: done ? YohakuColors.moss : YohakuColors.paperLine,
-          ),
-          const SizedBox(width: 6),
           SizedBox(
             width: 48,
             child: Text(
@@ -307,14 +302,16 @@ class _TimelineRow extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.6,
-                color: done ? YohakuColors.ink : YohakuColors.inkDim,
-              ),
-            ),
+            child: done
+                ? Text(
+                    text,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.6,
+                      color: YohakuColors.ink,
+                    ),
+                  )
+                : const BlankRule(height: 16),
           ),
         ],
       ),

@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../core/brand/handdrawn.dart';
+
 /// タイトル画面の「夜喫茶」の外観。
 class ExteriorPainter extends CustomPainter {
   ExteriorPainter({required this.animation}) : super(repaint: animation);
@@ -228,6 +230,8 @@ class ExteriorPainter extends CustomPainter {
     )..layout();
     tp.paint(canvas, sign.center - Offset(tp.width / 2, tp.height / 2));
 
+    _linework(canvas, r);
+
     // 地面・階段
     canvas.drawRect(r(0, 0.76, 1, 1), Paint()..color = const Color(0xFF232B45));
     canvas.drawRect(
@@ -302,6 +306,29 @@ class ExteriorPainter extends CustomPainter {
       lampTop,
       w * 0.12,
       Paint()..color = const Color(0x22FFE9B0),
+    );
+  }
+
+  /// 建物の輪郭をインクで。
+  void _linework(
+    Canvas canvas,
+    Rect Function(double, double, double, double) r,
+  ) {
+    const ink = Color(0xFF1E140E);
+    void line(Path p, {double width = 1.6}) =>
+        Rough.ink(canvas, p, color: ink, width: width, opacity: 0.8);
+    line(Rough.rrect(r(0.06, 0.34, 0.94, 0.76), 1, amount: 1.4), width: 2);
+    line(Rough.rrect(r(0.1, 0.55, 0.6, 0.73), 1));
+    line(Rough.rrect(r(0.67, 0.53, 0.85, 0.76), 1));
+    line(Rough.rrect(r(0.16, 0.37, 0.34, 0.45), 1));
+    line(Rough.rrect(r(0.66, 0.37, 0.84, 0.45), 1));
+    line(Rough.rrect(r(0.71, 0.47, 0.81, 0.515), 2), width: 1.2);
+    line(
+      Rough.line(
+        r(0, 0.76, 0, 0).topLeft,
+        r(1, 0.76, 1, 0.76).topLeft,
+        amount: 1.5,
+      ),
     );
   }
 

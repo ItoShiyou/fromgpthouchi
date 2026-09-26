@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/brand/handdrawn.dart';
+
 import '../../core/brand/theme.dart';
 import '../../core/models/content.dart';
 import '../../core/models/world.dart';
@@ -70,6 +72,7 @@ class _CafeSceneState extends State<CafeScene>
                 ),
               ),
             ),
+            const Positioned.fill(child: PaperGrain(opacity: 1.4)),
             for (var i = 0; i < widget.seated.length; i++)
               _guest(
                 i,
@@ -100,7 +103,7 @@ class _CafeSceneState extends State<CafeScene>
         def?.look ?? anonymousLook(g.visit.at.millisecondsSinceEpoch ~/ 60000);
     final size = w * 0.2;
     final line = def == null
-        ? 'おいしいコーヒーで、ほっと一息……'
+        ? _passerbyLines[g.visit.at.minute % _passerbyLines.length]
         : def.lines[g.visit.at.minute % def.lines.length];
     final left = anchor.dx * w - size / 2;
     return Positioned(
@@ -162,11 +165,13 @@ class _CoinBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: YohakuColors.paper,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: YohakuColors.lamp, width: 1.5),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+        shape: RoughBorder(
+          radius: 10,
+          side: BorderSide(color: YohakuColors.lamp, width: 1.5),
+        ),
+        shadows: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -198,10 +203,10 @@ class _SpeechBubble extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 190),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: YohakuColors.paper.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8)],
+          shape: RoughBorder(radius: 14),
+          shadows: const [BoxShadow(color: Colors.black38, blurRadius: 8)],
         ),
         child: Text(
           text,
@@ -215,3 +220,15 @@ class _SpeechBubble extends StatelessWidget {
     );
   }
 }
+
+/// 通りすがりの客のひとりごと。説明ではなく、その場で本当に言いそうなこと。
+const _passerbyLines = [
+  'すみません、お水もらえますか',
+  'あ、雨やんだ',
+  '砂糖、どこですか',
+  'ここ、こんな時間までやってるんだ',
+  '（スマホの充電が切れた）',
+  'もう一杯だけ',
+  '駅、こっちで合ってますよね',
+  '……ふう',
+];

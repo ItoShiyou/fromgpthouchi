@@ -21,43 +21,24 @@ class ReportDialog extends ConsumerWidget {
     final r = report;
     final content = ref.watch(contentProvider);
 
-    Widget row(
-      IconData icon,
-      String label,
-      String value, {
-      bool coin = false,
-    }) => Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: YohakuColors.paperLine),
-      ),
+    // 伝票のような一行：項目 ……… 値
+    Widget row(String label, String value, {bool strong = false}) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Container(
-            width: 26,
-            height: 26,
-            decoration: const BoxDecoration(
-              color: YohakuColors.cream,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 15, color: YohakuColors.wood),
-          ),
-          const SizedBox(width: 10),
           Text(label, style: const TextStyle(fontSize: 13)),
-          const Spacer(),
-          if (coin)
-            const Icon(
-              Icons.monetization_on,
-              size: 16,
-              color: YohakuColors.lamp,
-            ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
+          const Expanded(child: BlankRule(height: 14)),
+          const SizedBox(width: 8),
           Text(
             value,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+            style: TextStyle(
+              fontSize: strong ? 20 : 16,
+              fontWeight: FontWeight.w700,
+              color: strong ? YohakuColors.wood : YohakuColors.ink,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ],
       ),
@@ -68,14 +49,10 @@ class ReportDialog extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
+          Text(
             'おかえりなさい',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 4,
-            ),
+            style: YohakuText.heading(21),
           ),
           const SizedBox(height: 8),
           Text.rich(
@@ -108,23 +85,10 @@ class ReportDialog extends ConsumerWidget {
               ),
             ),
           const SizedBox(height: 16),
-          row(
-            Icons.payments_outlined,
-            '売上',
-            '+${yen(r.income).substring(1)}',
-            coin: true,
-          ),
-          row(Icons.person_outline, '来店したお客様', '${r.visitCount} 人'),
-          row(
-            Icons.inventory_2_outlined,
-            '新しいアイテム',
-            '${r.ticketsEarned + r.itemsFound.length} 個',
-          ),
-          row(
-            Icons.auto_awesome_outlined,
-            '特別な出来事',
-            '${r.newFragments.length} 件',
-          ),
+          row('売上', '+${yen(r.income)}', strong: true),
+          row('来店', '${r.visitCount} 人'),
+          row('手に入ったもの', '${r.ticketsEarned + r.itemsFound.length} 個'),
+          row('出来事', '${r.newFragments.length} 件'),
           if (r.newVisitorIds.isNotEmpty) ...[
             const SizedBox(height: 6),
             const Text(

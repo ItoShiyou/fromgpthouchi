@@ -88,7 +88,7 @@ class VisitorListScreen extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '${content.menu(visit.menuId).icon} ${content.menu(visit.menuId).name}',
+                        content.menu(visit.menuId).name,
                         style: const TextStyle(
                           fontSize: 11,
                           color: YohakuColors.inkDim,

@@ -46,15 +46,6 @@ class ShopScreen extends ConsumerWidget {
                 ),
               ),
             const SizedBox(height: 4),
-            const Text(
-              'これはモックです。実際の決済は行われません。\n本編は無料で最後まで遊べます。',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 10,
-                color: YohakuColors.inkDim,
-                height: 1.7,
-              ),
-            ),
           ],
         );
       },
@@ -81,7 +72,7 @@ class ShopScreen extends ConsumerWidget {
               style: const TextStyle(fontSize: 13),
             ),
             const Text(
-              '（モック：決済は発生しません）',
+              '（試作版のため、実際の決済はありません）',
               style: TextStyle(fontSize: 10, color: YohakuColors.inkDim),
             ),
             TextButton(
@@ -121,7 +112,7 @@ class _ProductCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          IconTile(product.icon, size: 64, background: YohakuColors.cream),
+          IconTile(product.icon, size: 60),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -144,9 +135,12 @@ class _ProductCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     product.itemIds
-                        .map((id) => content.item(id).icon)
-                        .join(' '),
-                    style: const TextStyle(fontSize: 14),
+                        .map((id) => content.item(id).name)
+                        .join('・'),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: YohakuColors.ink,
+                    ),
                   ),
                 ],
                 Align(

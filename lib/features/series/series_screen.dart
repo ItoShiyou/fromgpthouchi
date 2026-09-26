@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/brand/handdrawn.dart';
 import '../../core/brand/theme.dart';
 import '../../widgets/common.dart';
 
@@ -13,11 +14,11 @@ class _Title {
 }
 
 const _series = [
-  _Title('夜喫茶', '☕', [Color(0xFF3A2A4A), Color(0xFFD98A3E)], available: true),
-  _Title('古本屋', '📚', [Color(0xFF4A3A2A), Color(0xFFB98A5A)]),
-  _Title('海辺', '🐚', [Color(0xFF7FB6E6), Color(0xFFF6E3C4)]),
-  _Title('銭湯', '♨️', [Color(0xFF2E4A5A), Color(0xFF9FC3CF)]),
-  _Title('商店街', '🏮', [Color(0xFF3A2440), Color(0xFFE08A5A)]),
+  _Title('夜喫茶', '喫', [Color(0xFF3A2E3E), Color(0xFF3A2E3E)], available: true),
+  _Title('古本屋', '本', [Color(0xFF5A4634), Color(0xFF5A4634)]),
+  _Title('海辺', '浜', [Color(0xFF6F8FA3), Color(0xFF6F8FA3)]),
+  _Title('銭湯', '湯', [Color(0xFF3E5A63), Color(0xFF3E5A63)]),
+  _Title('商店街', '商', [Color(0xFF6B3E36), Color(0xFF6B3E36)]),
 ];
 
 /// まちの余白 シリーズ一覧。
@@ -58,10 +59,13 @@ class SeriesScreen extends StatelessWidget {
                   ),
                   child: Stack(
                     children: [
-                      Center(
-                        child: Text(
+                      Align(
+                        alignment: const Alignment(0, -0.35),
+                        child: InkGlyph(
                           t.icon,
-                          style: const TextStyle(fontSize: 46),
+                          size: 70,
+                          color: const Color(0xFFF3E6CF),
+                          locked: false,
                         ),
                       ),
                       Positioned(

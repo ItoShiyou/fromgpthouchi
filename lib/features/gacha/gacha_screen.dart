@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/brand/handdrawn.dart';
+
 import '../../core/brand/theme.dart';
 import '../../core/engine/gacha_engine.dart';
 import '../../core/models/content.dart';
@@ -89,12 +91,12 @@ class _GachaScreenState extends ConsumerState<GachaScreen>
                   horizontal: 16,
                   vertical: 6,
                 ),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: YohakuColors.paper,
-                  borderRadius: BorderRadius.circular(20),
+                  shape: RoughBorder(radius: 20),
                 ),
                 child: Text(
-                  'お店に置けるものを、ランダムで 1 つ（集めた数 $ownedInPool/${g.entries.length}）',
+                  '集めた $ownedInPool / ${g.entries.length}',
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -162,9 +164,9 @@ class _GachaScreenState extends ConsumerState<GachaScreen>
                           horizontal: 14,
                           vertical: 8,
                         ),
-                        decoration: BoxDecoration(
+                        decoration: ShapeDecoration(
                           color: const Color(0x66000000),
-                          borderRadius: BorderRadius.circular(20),
+                          shape: RoughBorder(radius: 20),
                         ),
                         child: Row(
                           children: [
@@ -311,7 +313,7 @@ class _GachaScreenState extends ConsumerState<GachaScreen>
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: Row(
                   children: [
-                    Text(c.item(e.itemId).icon),
+                    IconTile(c.item(e.itemId).icon, size: 22),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -335,7 +337,7 @@ class _GachaScreenState extends ConsumerState<GachaScreen>
               ),
             const SizedBox(height: 12),
             Text(
-              '・出てくるのは家具・小物・BGM・演出だけです。売上や客の数は変わりません。\n'
+              '・出るのは家具・小物・BGM・演出です。売上や来店数は変わりません。\n'
               '・${g.pityCount} 回引くまでに持っていないものが出なかった場合、次の 1 回は必ず持っていないものになります。\n'
               '・持っているものが出た場合は ${yen(g.duplicateRefund)} の売上に換わります。\n'
               '・特定の組み合わせを揃えることで得られる特典はありません。',
@@ -375,12 +377,11 @@ class _DrawButton extends StatelessWidget {
       opacity: enabled ? 1 : 0.5,
       child: Material(
         color: const Color(0xFF3A2414),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: YohakuColors.lamp, width: 1.5),
+        shape: const RoughBorder(
+          radius: 14,
+          side: BorderSide(color: YohakuColors.lamp, width: 1.5),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
           onTap: enabled ? onTap : null,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -400,9 +401,9 @@ class _DrawButton extends StatelessWidget {
                     horizontal: 12,
                     vertical: 2,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: YohakuColors.paper,
-                    borderRadius: BorderRadius.circular(12),
+                    shape: RoughBorder(radius: 12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -443,17 +444,19 @@ class _ResultCard extends StatelessWidget {
     return Container(
       width: 76,
       padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _rarityColor(draw.entry.rarity), width: 2),
+        shape: RoughBorder(
+          radius: 12,
+          side: BorderSide(color: _rarityColor(draw.entry.rarity), width: 2),
+        ),
       ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Column(
             children: [
-              Text(item.icon, style: const TextStyle(fontSize: 30)),
+              IconTile(item.icon, size: 40),
               const SizedBox(height: 4),
               Text(
                 item.name,

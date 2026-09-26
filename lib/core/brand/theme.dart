@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'handdrawn.dart';
+
 /// 「まちの余白」ブランド共通の色。
 ///
 /// 夜の紺地に、クリーム色の紙のパネルと、焦げ茶のインク・ボタン。
@@ -30,6 +32,26 @@ abstract final class YohakuColors {
   static const rose = Color(0xFFD9695B);
 }
 
+/// 見出しは明朝で。ゴシックだけの画面は既製のアプリ然として見える。
+abstract final class YohakuText {
+  static const serif = [
+    'Hiragino Mincho ProN',
+    'Yu Mincho',
+    'Noto Serif JP',
+    'Noto Serif CJK JP',
+    'serif',
+  ];
+
+  static TextStyle heading(double size, {Color color = YohakuColors.ink}) =>
+      TextStyle(
+        fontSize: size,
+        fontWeight: FontWeight.w600,
+        letterSpacing: size * 0.12,
+        color: color,
+        fontFamilyFallback: serif,
+      );
+}
+
 ThemeData buildYohakuTheme() {
   const scheme = ColorScheme.light(
     primary: YohakuColors.wood,
@@ -55,7 +77,11 @@ ThemeData buildYohakuTheme() {
         backgroundColor: YohakuColors.wood,
         foregroundColor: YohakuColors.paper,
         disabledBackgroundColor: YohakuColors.paperLine,
-        shape: const StadiumBorder(),
+        shape: RoughBorder(
+          radius: 12,
+          amount: 1.0,
+          side: BorderSide(color: YohakuColors.woodDark.withValues(alpha: 0.6)),
+        ),
         textStyle: const TextStyle(
           fontWeight: FontWeight.w600,
           letterSpacing: 1,
@@ -63,6 +89,13 @@ ThemeData buildYohakuTheme() {
       ),
     ),
     dialogTheme: const DialogThemeData(backgroundColor: YohakuColors.paper),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: YohakuColors.ink,
+        shape: const RoughBorder(radius: 10, amount: 0.9),
+        side: BorderSide(color: YohakuColors.ink.withValues(alpha: 0.5)),
+      ),
+    ),
     snackBarTheme: const SnackBarThemeData(
       backgroundColor: YohakuColors.paper,
       contentTextStyle: TextStyle(color: YohakuColors.ink),

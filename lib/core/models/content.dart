@@ -54,14 +54,14 @@ class ItemDef {
     this.tags = const [],
     this.price,
     this.source = ItemSource.coin,
-    this.icon = '📦',
+    this.icon = '物',
   });
 
   final String id;
   final String name;
   final ItemKind kind;
 
-  /// 図鑑・家具一覧のアイコン（モックでは絵文字。本番はイラストに差し替え）。
+  /// 図鑑・家具一覧の「しるし」（一文字）。
   final String icon;
   final PlacementSlot? slot;
 
@@ -147,7 +147,11 @@ class MenuDef {
 
 enum HairStyle { short, long, bob, bun, ponytail, gray, cap }
 
-/// 似顔絵の見た目。モックではコードで描き、本番はイラストに差し替える。
+enum FaceShape { round, oval, long }
+
+enum EyeStyle { dot, line, sleepy, round }
+
+/// 似顔絵の見た目。コードで描く（本番でイラストに差し替えても構造はそのまま）。
 class VisitorLook {
   const VisitorLook({
     required this.hair,
@@ -156,7 +160,16 @@ class VisitorLook {
     this.skin = 0xFFF4D6BE,
     this.accent,
     this.glasses = false,
+    this.face = FaceShape.oval,
+    this.eyes = EyeStyle.dot,
+    this.blush = false,
   });
+
+  final FaceShape face;
+  final EyeStyle eyes;
+
+  /// 頬の斜線（照れ・寒さ）。全員につけると記号的になるので一部だけ。
+  final bool blush;
 
   final int hair;
   final int clothes;
@@ -366,7 +379,7 @@ class ProductDef {
     this.tickets = 0,
     this.episodeId,
     this.consumable = false,
-    this.icon = '🎁',
+    this.icon = '品',
     this.recommended = false,
   });
 

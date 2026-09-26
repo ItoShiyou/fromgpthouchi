@@ -302,18 +302,21 @@ class _StoryCard extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: Text(
-                    i < found
-                        ? chain.steps[i].text
-                        : i == found && chain.steps[i].hint != null
-                        ? 'ヒント：${chain.steps[i].hint}'
-                        : '……',
-                    style: TextStyle(
-                      fontSize: i < found ? 13 : 11,
-                      height: 1.7,
-                      color: i < found ? YohakuColors.ink : YohakuColors.inkDim,
-                    ),
-                  ),
+                  child:
+                      i > found || (i == found && chain.steps[i].hint == null)
+                      ? const BlankRule()
+                      : Text(
+                          i < found
+                              ? chain.steps[i].text
+                              : '（${chain.steps[i].hint}）',
+                          style: TextStyle(
+                            fontSize: i < found ? 13 : 11,
+                            height: 1.7,
+                            color: i < found
+                                ? YohakuColors.ink
+                                : YohakuColors.inkDim,
+                          ),
+                        ),
                 ),
               ],
             ),

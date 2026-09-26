@@ -26,12 +26,8 @@ class SettingsScreen extends ConsumerWidget {
       ctrl.debugAdvance(d);
     }
 
-    Widget group(List<Widget> children) => Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: YohakuColors.paperLine),
-      ),
+    Widget group(List<Widget> children) => PaperCard(
+      padding: EdgeInsets.zero,
       child: Column(children: children),
     );
 
@@ -77,7 +73,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
               title: const Text('バックアップ'),
               subtitle: const Text(
-                '本番では Supabase に保存（モックではクリップボードへ）',
+                'セーブデータをコピーします',
                 style: TextStyle(fontSize: 11, color: YohakuColors.inkDim),
               ),
               onTap: () {

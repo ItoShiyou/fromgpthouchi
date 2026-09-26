@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../../core/brand/handdrawn.dart';
 import '../../core/models/content.dart';
 import '../../core/models/world.dart';
 
@@ -77,6 +78,7 @@ class CafePainter extends CustomPainter {
     _paintCounter(canvas, r(counterRect), rs);
     _paintLight(canvas, rs);
     _paintCat(canvas, rs, t);
+    _paintLinework(canvas, rs, r);
     _paintLighting(canvas, rs, top, size.height);
     canvas.restore();
   }
@@ -196,6 +198,151 @@ class CafePainter extends CustomPainter {
       for (var y = bottom + 24.0; y < size.height; y += 26) {
         canvas.drawLine(Offset(0, y), Offset(w, y), plank);
       }
+    }
+  }
+
+  /// 塗りの上に、手で引いたインクの輪郭を重ねる。
+  /// 塗りだけのベクター画は「作られた絵」に見えるので、線で絵にする。
+  void _paintLinework(Canvas canvas, Size s, Rect Function(Rect) r) {
+    final w = s.width, h = s.height;
+    const ink = Color(0xFF3B2C22);
+    void line(Path p, {double width = 1.3, double opacity = 0.75}) =>
+        Rough.ink(canvas, p, color: ink, width: width, opacity: opacity);
+    Path rect(Rect x, [double radius = 2]) =>
+        Rough.rrect(x, radius, amount: 1.0);
+
+    // 壁と床の境目・腰壁
+    line(
+      Rough.line(Offset(0, h * 0.515), Offset(w, h * 0.515), amount: 1.2),
+      opacity: 0.5,
+    );
+    line(
+      Rough.line(Offset(0, h * floorTop), Offset(w, h * floorTop), amount: 1.2),
+      opacity: 0.5,
+    );
+
+    // 窓
+    final win = r(windowRect);
+    line(rect(win.inflate(win.width * 0.035), 4), width: 1.6);
+    line(rect(win), opacity: 0.5);
+
+    // 壁のもの
+    switch (_at(PlacementSlot.wall)) {
+      case 'pendulum_clock':
+        final body = Rect.fromLTWH(w * 0.60, h * 0.08, w * 0.12, h * 0.36);
+        line(rect(body, 6));
+        line(
+          Rough.oval(
+            Rect.fromCircle(
+              center: Offset(body.center.dx, body.top + body.width * 0.62),
+              radius: body.width * 0.36,
+            ),
+          ),
+          width: 1.1,
+        );
+      case 'bookshelf':
+        line(rect(Rect.fromLTWH(w * 0.54, h * 0.08, w * 0.38, h * 0.36)));
+      case 'old_poster':
+        line(rect(Rect.fromLTWH(w * 0.62, h * 0.08, w * 0.22, h * 0.3)));
+      case 'photo_frame':
+        line(rect(Rect.fromLTWH(w * 0.64, h * 0.12, w * 0.2, h * 0.16)));
+    }
+
+    // 席
+    if (_at(PlacementSlot.seat) != null) {
+      line(
+        rect(Rect.fromLTWH(w * 0.03, h * 0.54, w * 0.34, h * 0.14), 10),
+        width: 1.5,
+      );
+      line(
+        rect(Rect.fromLTWH(w * 0.02, h * 0.64, w * 0.36, h * 0.09), 8),
+        width: 1.5,
+      );
+    }
+
+    // テーブル
+    if (_at(PlacementSlot.table) != null) {
+      line(
+        Rough.oval(
+          Rect.fromCenter(
+            center: Offset(w * 0.47, h * 0.72),
+            width: w * 0.24,
+            height: h * 0.05,
+          ),
+        ),
+        width: 1.5,
+      );
+      line(
+        Rough.line(Offset(w * 0.463, h * 0.745), Offset(w * 0.463, h * 0.86)),
+        opacity: 0.6,
+      );
+      line(
+        Rough.line(Offset(w * 0.477, h * 0.745), Offset(w * 0.477, h * 0.86)),
+        opacity: 0.6,
+      );
+    }
+
+    // 隅
+    final base = Offset(w * 0.585, h * 0.80);
+    switch (_at(PlacementSlot.corner)) {
+      case 'monstera':
+        line(
+          rect(
+            Rect.fromCenter(
+              center: base.translate(0, -h * 0.04),
+              width: w * 0.08,
+              height: h * 0.08,
+            ),
+          ),
+        );
+      case 'record_player':
+        line(
+          rect(
+            Rect.fromLTWH(
+              base.dx - w * 0.07,
+              base.dy - h * 0.14,
+              w * 0.14,
+              h * 0.14,
+            ),
+          ),
+        );
+    }
+
+    // カウンターとスツール
+    final c = r(counterRect);
+    line(rect(c), width: 1.6);
+    line(
+      rect(
+        Rect.fromLTWH(
+          c.left - w * 0.02,
+          c.top - h * 0.02,
+          c.width + w * 0.02,
+          h * 0.025,
+        ),
+      ),
+      width: 1.2,
+    );
+    for (final x in [0.74, 0.88]) {
+      line(
+        Rough.oval(
+          Rect.fromCenter(
+            center: Offset(w * x + w * 0.006, c.bottom),
+            width: w * 0.08,
+            height: h * 0.02,
+          ),
+        ),
+        width: 1.1,
+      );
+    }
+    // 板のすじ（床）
+    for (var i = 0; i < 6; i++) {
+      final y = h * (floorTop + 0.05 + i * 0.055);
+      final x0 = w * ((i * 0.37) % 1.0);
+      line(
+        Rough.line(Offset(x0, y), Offset(x0 + w * 0.12, y + 0.5)),
+        width: 0.8,
+        opacity: 0.35,
+      );
     }
   }
 

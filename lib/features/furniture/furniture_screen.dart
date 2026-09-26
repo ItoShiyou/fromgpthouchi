@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/brand/handdrawn.dart';
+
 import '../../core/brand/theme.dart';
 import '../../core/engine/ambience.dart';
 import '../../core/models/content.dart';
@@ -136,12 +138,7 @@ class _ItemCell extends StatelessWidget {
         children: [
           Column(
             children: [
-              IconTile(
-                item.icon,
-                size: 58,
-                locked: !visible,
-                background: Colors.transparent,
-              ),
+              IconTile(item.icon, size: 54, locked: !visible),
               const SizedBox(height: 4),
               Text(
                 visible ? item.name : '？？？',
@@ -272,9 +269,9 @@ class _Footer extends ConsumerWidget {
                   horizontal: 10,
                   vertical: 6,
                 ),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: YohakuColors.paper.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(10),
+                  shape: RoughBorder(radius: 10),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
