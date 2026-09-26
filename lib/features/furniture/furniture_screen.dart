@@ -5,190 +5,317 @@ import '../../core/brand/theme.dart';
 import '../../core/engine/ambience.dart';
 import '../../core/models/content.dart';
 import '../../core/state/game_controller.dart';
+import '../../titles/yoru_kissa/cafe_scene.dart';
 import '../../widgets/common.dart';
 
 /// 06. 家具 ― 配置・変更。
 ///
 /// 家具にステータスは無い。タグの組み合わせで「雰囲気」が生まれ、
 /// 来る客・起きる出来事が少し変わる。
-class FurnitureScreen extends ConsumerWidget {
+class FurnitureScreen extends ConsumerStatefulWidget {
   const FurnitureScreen({super.key});
+
+  @override
+  ConsumerState<FurnitureScreen> createState() => _FurnitureScreenState();
+}
+
+class _FurnitureScreenState extends ConsumerState<FurnitureScreen> {
+  String? _selected;
+
+  static const _tabs = ['すべて', 'テーブル', '椅子', '照明', '装飾', '音'];
+
+  bool _inTab(ItemDef i, int tab) => switch (tab) {
+    1 => i.slot == PlacementSlot.table || i.slot == PlacementSlot.counter,
+    2 => i.slot == PlacementSlot.seat,
+    3 => i.slot == PlacementSlot.light,
+    4 => const {
+      PlacementSlot.window,
+      PlacementSlot.wall,
+      PlacementSlot.corner,
+    }.contains(i.slot),
+    5 => i.kind != ItemKind.furniture,
+    _ => true,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ref.watch(gameProvider);
+    final c = ref.watch(contentProvider);
+    final active = ref.watch(ambiencesProvider).map((a) => a.id).toSet();
+    final resolver = AmbienceResolver(c);
+
+    return PaperPage(
+      title: '家具',
+      tabs: _tabs,
+      footer: _Footer(selected: _selected),
+      builder: (context, tab) {
+        final items = c.items.where((i) => _inTab(i, tab)).toList();
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 30,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  children: [
+                    for (final a in c.ambiences)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Tooltip(
+                          message: active.contains(a.id)
+                              ? a.description
+                              : 'あと：${resolver.missing(a, s.placement.values).map((r) => r.count > 1 ? '${r.tag}×${r.count}' : r.tag).join('・')}',
+                          triggerMode: TooltipTriggerMode.tap,
+                          child: TagPill(
+                            active.contains(a.id) ? '✓ ${a.name}' : a.name,
+                            color: active.contains(a.id)
+                                ? YohakuColors.wood
+                                : YohakuColors.inkDim,
+                            filled: active.contains(a.id),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 16),
+              sliver: SliverGrid.count(
+                crossAxisCount: 3,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 0.82,
+                children: [
+                  for (final i in items)
+                    _ItemCell(
+                      item: i,
+                      owned: s.ownedItems.contains(i.id),
+                      inUse:
+                          s.placement[i.slot] == i.id ||
+                          s.activeBgm == i.id ||
+                          s.activeEffects.contains(i.id),
+                      selected: _selected == i.id,
+                      onTap: () => setState(() => _selected = i.id),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ItemCell extends StatelessWidget {
+  const _ItemCell({
+    required this.item,
+    required this.owned,
+    required this.inUse,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final ItemDef item;
+  final bool owned;
+  final bool inUse;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = owned || item.price != null;
+    return PaperCard(
+      onTap: onTap,
+      highlight: selected,
+      padding: const EdgeInsets.fromLTRB(6, 8, 6, 6),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Column(
+            children: [
+              IconTile(
+                item.icon,
+                size: 58,
+                locked: !visible,
+                background: Colors.transparent,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                visible ? item.name : '？？？',
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                inUse
+                    ? '使用中'
+                    : owned
+                    ? '所持'
+                    : item.price != null
+                    ? yen(item.price!)
+                    : item.source.label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: inUse
+                      ? YohakuColors.wood
+                      : owned
+                      ? YohakuColors.moss
+                      : YohakuColors.inkDim,
+                ),
+              ),
+            ],
+          ),
+          if (inUse)
+            const Positioned(
+              top: -2,
+              right: -2,
+              child: Icon(
+                Icons.check_circle,
+                size: 16,
+                color: YohakuColors.wood,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 下部：店のプレビュー＋選んだ家具の操作。
+class _Footer extends ConsumerWidget {
+  const _Footer({required this.selected});
+
+  final String? selected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(gameProvider);
     final c = ref.watch(contentProvider);
     final ctrl = ref.read(gameProvider.notifier);
-    final resolver = AmbienceResolver(c);
-    final active = ref.watch(ambiencesProvider).map((a) => a.id).toSet();
+    final item = selected == null ? null : c.item(selected!);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      children: [
-        const SectionTitle('お店の雰囲気'),
-        for (final a in c.ambiences)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 136,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: TagPill(
-                      a.name,
-                      filled: active.contains(a.id),
-                      color: active.contains(a.id)
-                          ? YohakuColors.lamp
-                          : YohakuColors.moss,
+    String label;
+    VoidCallback? action;
+    if (item == null) {
+      label = '家具を選んでください';
+    } else if (!s.ownedItems.contains(item.id)) {
+      if (item.price != null) {
+        label = '購入して配置 ${yen(item.price!)}';
+        action = s.money >= item.price!
+            ? () {
+                if (ctrl.buyItem(item.id)) ctrl.place(item.id);
+              }
+            : null;
+      } else {
+        label = '${item.source.label}で手に入ります';
+      }
+    } else if (item.kind == ItemKind.bgm) {
+      final on = s.activeBgm == item.id;
+      label = on ? 'BGM を止める' : 'BGM にする';
+      action = () => ctrl.setBgm(on ? null : item.id);
+    } else if (item.kind == ItemKind.effect) {
+      final on = s.activeEffects.contains(item.id);
+      label = on ? '演出をやめる' : '演出をつける';
+      action = () => ctrl.toggleEffect(item.id);
+    } else if (s.placement[item.slot] == item.id) {
+      label = '片付ける';
+      action = () => ctrl.clearSlot(item.slot!);
+    } else {
+      label = '配置する';
+      action = () => ctrl.place(item.id);
+    }
+
+    return SizedBox(
+      height: 170,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, box) => ClipRect(
+                child: OverflowBox(
+                  maxHeight: box.maxWidth * 1.25,
+                  alignment: const Alignment(0, 0.35),
+                  child: SizedBox(
+                    width: box.maxWidth,
+                    height: box.maxWidth * 1.25,
+                    child: CafeScene(
+                      content: c,
+                      moment: ctrl.currentMoment(),
+                      placement: s.placement,
+                      effects: s.activeEffects,
+                      seated: const [],
+                      showBubble: false,
+                      onGuestTap: (_) {},
                     ),
                   ),
                 ),
-                Expanded(
-                  child: Text(
-                    active.contains(a.id)
-                        ? a.description
-                        : 'あと：${resolver.missing(a, s.placement.values).map((r) => r.count > 1 ? '${r.tag}×${r.count}' : r.tag).join('・')}'
-                              '${a.minSatisfied < a.requirements.length ? '（${a.minSatisfied}つでよい）' : ''}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: YohakuColors.paperDim,
-                      height: 1.6,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        for (final slot in PlacementSlot.values) ...[
-          SectionTitle(
-            slot.label,
-            trailing: s.placement[slot] == null
-                ? null
-                : TextButton(
-                    onPressed: () => ctrl.clearSlot(slot),
-                    child: const Text('片付ける'),
-                  ),
-          ),
-          ...c.items
-              .where(
-                (i) =>
-                    i.slot == slot &&
-                    (s.ownedItems.contains(i.id) || i.price != null),
-              )
-              .map((i) {
-                final owned = s.ownedItems.contains(i.id);
-                final placed = s.placement[slot] == i.id;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      side: BorderSide(
-                        color: placed ? YohakuColors.lamp : Colors.transparent,
+          if (item != null)
+            Positioned(
+              left: 12,
+              top: 10,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: YohakuColors.paper.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s.ownedItems.contains(item.id) || item.price != null
+                          ? item.name
+                          : '？？？',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
                       ),
                     ),
-                    child: ListTile(
-                      title: Text(i.name),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          children: [for (final t in i.tags) TagPill(t)],
+                    if (s.ownedItems.contains(item.id) || item.price != null)
+                      Text(
+                        item.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: YohakuColors.inkDim,
                         ),
                       ),
-                      trailing: placed
-                          ? const Text(
-                              '置いてある',
-                              style: TextStyle(
-                                color: YohakuColors.lamp,
-                                fontSize: 12,
-                              ),
-                            )
-                          : owned
-                          ? OutlinedButton(
-                              onPressed: () => ctrl.place(i.id),
-                              child: const Text('置く'),
-                            )
-                          : FilledButton.tonal(
-                              onPressed: s.money >= i.price!
-                                  ? () => _buy(context, ref, i)
-                                  : null,
-                              child: Text(yen(i.price!)),
-                            ),
-                    ),
-                  ),
-                );
-              }),
-        ],
-        const SectionTitle('BGM'),
-        Card(
-          child: RadioGroup<String?>(
-            groupValue: s.activeBgm,
-            onChanged: ctrl.setBgm,
-            child: Column(
-              children: [
-                const RadioListTile<String?>(
-                  value: null,
-                  title: Text('店の物音だけ'),
+                  ],
                 ),
-                for (final i in c.items.where(
-                  (i) => i.kind == ItemKind.bgm && s.ownedItems.contains(i.id),
-                ))
-                  RadioListTile<String?>(
-                    value: i.id,
-                    title: Text(i.name.replaceFirst('BGM：', '')),
-                  ),
-              ],
+              ),
+            ),
+          Positioned(
+            right: 12,
+            bottom: 12,
+            child: SizedBox(
+              height: 42,
+              child: FilledButton(
+                style: FilledButton.styleFrom(elevation: 4),
+                onPressed: action,
+                child: Text(label),
+              ),
             ),
           ),
-        ),
-        const SectionTitle('演出'),
-        Card(
-          child: Column(
-            children: [
-              for (final i in c.items.where((i) => i.kind == ItemKind.effect))
-                SwitchListTile(
-                  value: s.activeEffects.contains(i.id),
-                  onChanged: s.ownedItems.contains(i.id)
-                      ? (_) => ctrl.toggleEffect(i.id)
-                      : null,
-                  title: Text(
-                    s.ownedItems.contains(i.id)
-                        ? i.name.replaceFirst('演出：', '')
-                        : '？？？',
-                  ),
-                  subtitle: Text(
-                    s.ownedItems.contains(i.id)
-                        ? i.description
-                        : '入手方法：${i.source.label}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: YohakuColors.paperDim,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          '余白くじ・セットで手に入れたものも、ここに並びます。',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 11, color: YohakuColors.paperDim),
-        ),
-      ],
+        ],
+      ),
     );
-  }
-
-  void _buy(BuildContext context, WidgetRef ref, ItemDef i) {
-    final ctrl = ref.read(gameProvider.notifier);
-    if (ctrl.buyItem(i.id)) {
-      ctrl.place(i.id);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('「${i.name}」を置きました')));
-    }
   }
 }

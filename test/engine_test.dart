@@ -268,7 +268,7 @@ void main() {
     for (final i in c.items.where((i) => i.kind == ItemKind.furniture)) {
       expect(i.slot, isNotNull, reason: i.id);
     }
-    // 企画書の試作品の規模：客 5 / 家具 10 / メニュー 5 / 出来事 5
+    // 試作品の規模：客 5 / 家具 10 / メニュー 6 / 出来事 5
     expect(c.visitors.where((v) => v.premiumEpisodeId == null).length, 5);
     expect(
       c.items
@@ -279,7 +279,7 @@ void main() {
           .length,
       10,
     );
-    expect(c.menus.length, 5);
+    expect(c.menus.length, 6); // ホットケーキを追加（参考デザインに合わせて）
     expect(c.stories.where((s) => s.premiumEpisodeId == null).length, 5);
   });
 }

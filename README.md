@@ -4,13 +4,21 @@
 住宅街の端の小さな喫茶店を、アプリを閉じている間も営業させておき、
 ときどき覗いて、客と小さな出来事を集めるゲームです。
 
-| おかえりなさい | 夜の店 | 昼の店 | 客詳細 |
+| タイトル | お店（ホーム） | おかえりなさい | 特別な出来事 |
 | --- | --- | --- | --- |
-| ![](docs/screenshots/02_report.png) | ![](docs/screenshots/01_home_night.png) | ![](docs/screenshots/01_home_day.png) | ![](docs/screenshots/04_visitor_detail.png) |
+| ![](docs/screenshots/00_title.png) | ![](docs/screenshots/01_home.png) | ![](docs/screenshots/02_report.png) | ![](docs/screenshots/02b_event_0.png) |
 
-| 模様替え（雰囲気） | 図鑑 | 余白くじ（排出率・天井） | ショップ |
+| 来店客一覧 | 客詳細 | 客の出来事 | 図鑑 |
 | --- | --- | --- | --- |
-| ![](docs/screenshots/06_furniture.png) | ![](docs/screenshots/05_zukan.png) | ![](docs/screenshots/08_gacha.png) | ![](docs/screenshots/09_shop.png) |
+| ![](docs/screenshots/03_visitors.png) | ![](docs/screenshots/04_visitor_detail.png) | ![](docs/screenshots/04b_visitor_events.png) | ![](docs/screenshots/05_zukan.png) |
+
+| 家具 | メニュー | 余白くじ | ショップ |
+| --- | --- | --- | --- |
+| ![](docs/screenshots/06b_furniture_selected.png) | ![](docs/screenshots/07_menu.png) | ![](docs/screenshots/08_gacha.png) | ![](docs/screenshots/09_shop.png) |
+
+| 雨の日 | 雪の日 | 設定 |
+| --- | --- | --- |
+| ![](docs/screenshots/11_weather_rain.png) | ![](docs/screenshots/11_weather_snow.png) | ![](docs/screenshots/10_settings.png) |
 
 ## 動かす
 
@@ -25,10 +33,13 @@ flutter test           # 放置計算・天井・雰囲気などのテスト
 
 ## 中身
 
-- 規模は企画書の「最初の試作品」: 客 5 人・家具 10 個・メニュー 5 個・出来事 5 つ・放置上限 12 時間
+- 規模は企画書の「最初の試作品」: 客 5 人・家具 10 個・メニュー 6 個・出来事 5 つ・放置上限 12 時間
   （＋有料エピソード 1 本、くじ・セット販売のアイテム）
 - 画面 10 枚：ホーム／放置結果／客一覧／客詳細／図鑑／家具／メニュー／余白くじ／ショップ／設定
-- 画像素材なし。店は背景・家具・天気・照明を `CustomPainter` のレイヤーで描画
+  ＋ タイトル・特別な出来事・シリーズ一覧
+- デザインは「夜の紺地 × クリーム色の紙パネル × 焦げ茶のボタン」。お店を基点に、下のアイコン列から各パネルを開く
+- 画像素材なし（仮素材）。店・外観・くじ機・客の似顔絵は `CustomPainter` で描画し、
+  家具・メニューのアイコンは絵文字。本番ではイラストに差し替える前提
 - 課金はモック（決済は発生しません）
 - ローカル保存（shared_preferences）。本実装では Drift + Supabase へ移行予定
 

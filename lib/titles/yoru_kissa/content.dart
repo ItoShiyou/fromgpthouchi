@@ -58,6 +58,7 @@ const _items = <ItemDef>[
   // はじめから（2）
   ItemDef(
     id: 'round_table',
+    icon: '🪵',
     name: '木の丸テーブル',
     kind: ItemKind.furniture,
     slot: PlacementSlot.table,
@@ -67,6 +68,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'lace_curtain',
+    icon: '🪟',
     name: 'レースのカーテン',
     kind: ItemKind.furniture,
     slot: PlacementSlot.window,
@@ -77,6 +79,7 @@ const _items = <ItemDef>[
   // 売上で買える（8）
   ItemDef(
     id: 'green_sofa',
+    icon: '🛋️',
     name: '緑色のソファ',
     kind: ItemKind.furniture,
     slot: PlacementSlot.seat,
@@ -86,6 +89,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'red_sofa',
+    icon: '🛋️',
     name: '赤いソファ',
     kind: ItemKind.furniture,
     slot: PlacementSlot.seat,
@@ -95,6 +99,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'pendulum_clock',
+    icon: '🕰️',
     name: '古い振り子時計',
     kind: ItemKind.furniture,
     slot: PlacementSlot.wall,
@@ -104,6 +109,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'bookshelf',
+    icon: '📚',
     name: '壁の本棚',
     kind: ItemKind.furniture,
     slot: PlacementSlot.wall,
@@ -113,6 +119,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'neon_sign',
+    icon: '🌃',
     name: 'ネオン管の看板',
     kind: ItemKind.furniture,
     slot: PlacementSlot.wall,
@@ -122,6 +129,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'stand_light',
+    icon: '💡',
     name: '暖色のスタンドライト',
     kind: ItemKind.furniture,
     slot: PlacementSlot.light,
@@ -131,6 +139,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'monstera',
+    icon: '🪴',
     name: 'モンステラ',
     kind: ItemKind.furniture,
     slot: PlacementSlot.corner,
@@ -140,6 +149,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'record_player',
+    icon: '💿',
     name: 'レコードプレーヤー',
     kind: ItemKind.furniture,
     slot: PlacementSlot.corner,
@@ -150,6 +160,7 @@ const _items = <ItemDef>[
   // 余白くじ
   ItemDef(
     id: 'old_poster',
+    icon: '🎞️',
     name: '古い映画のポスター',
     kind: ItemKind.furniture,
     slot: PlacementSlot.wall,
@@ -159,6 +170,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'flower_vase',
+    icon: '🌷',
     name: '一輪挿し',
     kind: ItemKind.furniture,
     slot: PlacementSlot.counter,
@@ -168,6 +180,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'goldfish_bowl',
+    icon: '🐠',
     name: '金魚鉢',
     kind: ItemKind.furniture,
     slot: PlacementSlot.counter,
@@ -177,6 +190,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'cat_figure',
+    icon: '🐈',
     name: '招き猫（小）',
     kind: ItemKind.furniture,
     slot: PlacementSlot.counter,
@@ -186,6 +200,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'moon_window',
+    icon: '🌙',
     name: '月夜の窓',
     kind: ItemKind.furniture,
     slot: PlacementSlot.window,
@@ -195,6 +210,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'bgm_rain_jazz',
+    icon: '🎹',
     name: 'BGM：雨音とピアノ',
     kind: ItemKind.bgm,
     source: ItemSource.gacha,
@@ -202,6 +218,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'bgm_midnight_radio',
+    icon: '📻',
     name: 'BGM：深夜ラジオ',
     kind: ItemKind.bgm,
     source: ItemSource.gacha,
@@ -209,6 +226,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'fx_steam',
+    icon: '☕',
     name: '演出：カップの湯気',
     kind: ItemKind.effect,
     source: ItemSource.gacha,
@@ -217,6 +235,7 @@ const _items = <ItemDef>[
   // セット販売
   ItemDef(
     id: 'night_lamp',
+    icon: '🌕',
     name: '月のランプ',
     kind: ItemKind.furniture,
     slot: PlacementSlot.light,
@@ -226,6 +245,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'umbrella_stand',
+    icon: '🌂',
     name: '傘立て',
     kind: ItemKind.furniture,
     slot: PlacementSlot.corner,
@@ -235,6 +255,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'fx_window_rain',
+    icon: '💧',
     name: '演出：窓の雨粒',
     kind: ItemKind.effect,
     source: ItemSource.pack,
@@ -242,6 +263,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'stained_lamp',
+    icon: '🏮',
     name: 'ステンドグラスのランプ',
     kind: ItemKind.furniture,
     slot: PlacementSlot.light,
@@ -251,6 +273,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'jukebox',
+    icon: '🎶',
     name: 'ジュークボックス',
     kind: ItemKind.furniture,
     slot: PlacementSlot.corner,
@@ -260,6 +283,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'checkered_table',
+    icon: '♟️',
     name: '市松模様のテーブル',
     kind: ItemKind.furniture,
     slot: PlacementSlot.table,
@@ -270,6 +294,7 @@ const _items = <ItemDef>[
   // 出来事のあとに
   ItemDef(
     id: 'red_umbrella',
+    icon: '☂️',
     name: '赤い傘',
     kind: ItemKind.furniture,
     slot: PlacementSlot.corner,
@@ -279,6 +304,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'photo_frame',
+    icon: '🖼️',
     name: '三人の写真',
     kind: ItemKind.furniture,
     slot: PlacementSlot.wall,
@@ -340,33 +366,57 @@ const _ambiences = <AmbienceDef>[
 // ---------------------------------------------------------------------------
 
 const _menus = <MenuDef>[
-  MenuDef(id: 'blend', name: 'ブレンド', price: 450, description: '店の基本。少し深煎り。'),
+  MenuDef(
+    id: 'blend',
+    name: 'ブレンドコーヒー',
+    icon: '☕',
+    category: MenuCategory.drink,
+    price: 450,
+    description: '店の基本。少し深煎り、香り高く、やさしい味わい。',
+  ),
   MenuDef(
     id: 'iced_coffee',
     name: 'アイスコーヒー',
+    icon: '🧊',
+    category: MenuCategory.drink,
     price: 500,
     description: '氷がとけても薄くならないように、濃いめに。',
   ),
   MenuDef(
+    id: 'cream_soda',
+    name: 'クリームソーダ',
+    icon: '🥤',
+    category: MenuCategory.drink,
+    price: 600,
+    unlockCost: 10000,
+    description: '緑色。さくらんぼは一つ。見た目も楽しい定番の一杯。',
+  ),
+  MenuDef(
+    id: 'napolitan',
+    name: 'ナポリタン',
+    icon: '🍝',
+    category: MenuCategory.food,
+    price: 850,
+    unlockCost: 15000,
+    description: '鉄板で出す。ケチャップは焦がし気味。懐かしさを感じる味。',
+  ),
+  MenuDef(
     id: 'pudding',
     name: '固めのプリン',
+    icon: '🍮',
+    category: MenuCategory.sweets,
     price: 400,
     unlockCost: 6000,
     description: 'スプーンを入れると、ちゃんと抵抗がある。',
   ),
   MenuDef(
-    id: 'cream_soda',
-    name: 'クリームソーダ',
-    price: 600,
-    unlockCost: 10000,
-    description: '緑色。さくらんぼは一つ。',
-  ),
-  MenuDef(
-    id: 'napolitan',
-    name: 'ナポリタン',
-    price: 850,
-    unlockCost: 15000,
-    description: '鉄板で出す。ケチャップは焦がし気味。',
+    id: 'hotcake',
+    name: 'ホットケーキ',
+    icon: '🥞',
+    category: MenuCategory.sweets,
+    price: 700,
+    unlockCost: 8000,
+    description: 'ふんわり焼き上げた二段重ね。バターは溶けかけで出す。',
   ),
 ];
 
@@ -377,9 +427,14 @@ const _menus = <MenuDef>[
 const _visitors = <VisitorDef>[
   VisitorDef(
     id: 'nurse',
-    name: '夜勤明けの看護師',
+    look: VisitorLook(
+      hair: 0xFF6B4A36,
+      clothes: 0xFF9FC3CF,
+      style: HairStyle.long,
+      accent: 0xFFF7F2E8,
+    ),
+    name: '夜勤明けの女性',
     silhouetteName: '朝いちばんの人',
-    colorValue: 0xFF7FA7B8,
     slots: {TimeSlot.morning},
     favoriteMenuId: 'blend',
     ambienceBoost: {'calm': 1.6},
@@ -392,9 +447,13 @@ const _visitors = <VisitorDef>[
   ),
   VisitorDef(
     id: 'window_man',
-    name: '新聞の男',
+    look: VisitorLook(
+      hair: 0xFF2E2A2A,
+      clothes: 0xFF2F3A55,
+      accent: 0xFF8C3B3B,
+    ),
+    name: '会社員の男性',
     silhouetteName: '窓際の人',
-    colorValue: 0xFF8C7B6B,
     slots: {TimeSlot.evening, TimeSlot.night},
     favoriteMenuId: 'blend',
     ambienceBoost: {'retro': 1.6, 'books': 1.4},
@@ -409,9 +468,14 @@ const _visitors = <VisitorDef>[
   ),
   VisitorDef(
     id: 'student',
+    look: VisitorLook(
+      hair: 0xFF2B2622,
+      clothes: 0xFF33406B,
+      style: HairStyle.ponytail,
+      accent: 0xFFC24B45,
+    ),
     name: '参考書の高校生',
     silhouetteName: '制服の人',
-    colorValue: 0xFF6F86C2,
     slots: {TimeSlot.evening, TimeSlot.night},
     favoriteMenuId: 'cream_soda',
     weatherBoost: {Weather.rain: 2.0, Weather.shower: 2.0},
@@ -426,9 +490,13 @@ const _visitors = <VisitorDef>[
   ),
   VisitorDef(
     id: 'dog_student',
+    look: VisitorLook(
+      hair: 0xFFA0703F,
+      clothes: 0xFF6F8F5E,
+      style: HairStyle.bob,
+    ),
     name: '犬を連れた大学生',
     silhouetteName: '犬を連れた人',
-    colorValue: 0xFFC49A6C,
     slots: {TimeSlot.morning, TimeSlot.noon, TimeSlot.evening},
     weathers: {Weather.sunny, Weather.cloudy},
     favoriteMenuId: 'iced_coffee',
@@ -443,14 +511,20 @@ const _visitors = <VisitorDef>[
   ),
   VisitorDef(
     id: 'rain_person',
+    look: VisitorLook(
+      hair: 0xFF1F2430,
+      clothes: 0xFF4E5E6E,
+      style: HairStyle.long,
+      accent: 0xFF9DB4C0,
+    ),
     name: '雨の日だけ来る人',
     silhouetteName: '傘の人',
-    colorValue: 0xFF5A6E7F,
     slots: {TimeSlot.night, TimeSlot.lateNight},
     weathers: {Weather.rain, Weather.shower, Weather.snow},
     favoriteMenuId: 'pudding',
     ambienceBoost: {'night': 2.0, 'rainy': 2.0},
     baseWeight: 1.4,
+    special: true,
     profile: [
       (1, '雨の夜にだけ現れる。'),
       (3, '晴れの日に見かけた人は、まだいない。'),
@@ -461,13 +535,19 @@ const _visitors = <VisitorDef>[
   // プレミアムエピソード「雨の日の三人」で登場
   VisitorDef(
     id: 'photographer',
+    look: VisitorLook(
+      hair: 0xFFBDB8B0,
+      clothes: 0xFF7A5C45,
+      style: HairStyle.gray,
+      glasses: true,
+    ),
     name: '古いカメラの老人',
     silhouetteName: 'カメラの人',
-    colorValue: 0xFF9E8FA8,
     slots: {TimeSlot.noon, TimeSlot.evening},
     weathers: {Weather.rain, Weather.cloudy},
     favoriteMenuId: 'napolitan',
     premiumEpisodeId: 'rain_three',
+    special: true,
     profile: [
       (1, 'フィルムのカメラを首から下げている。'),
       (3, '一日に一枚しか撮らない、と決めているらしい。'),
@@ -737,6 +817,8 @@ const _gacha = GachaDef(
 const _products = <ProductDef>[
   ProductDef(
     id: 'ad_free',
+    icon: '🔕',
+    recommended: true,
     name: '広告なし',
     type: ProductType.adFree,
     priceYen: 680,
@@ -744,6 +826,8 @@ const _products = <ProductDef>[
   ),
   ProductDef(
     id: 'pack_moon',
+    icon: '🌙',
+    recommended: true,
     name: '月夜の窓セット',
     type: ProductType.pack,
     priceYen: 220,
@@ -752,6 +836,8 @@ const _products = <ProductDef>[
   ),
   ProductDef(
     id: 'pack_rain',
+    icon: '☔',
+    recommended: true,
     name: '雨の日セット',
     type: ProductType.pack,
     priceYen: 320,
@@ -760,6 +846,8 @@ const _products = <ProductDef>[
   ),
   ProductDef(
     id: 'pack_retro',
+    icon: '🏮',
+    recommended: true,
     name: 'レトロ喫茶セット',
     type: ProductType.pack,
     priceYen: 680,
@@ -768,6 +856,7 @@ const _products = <ProductDef>[
   ),
   ProductDef(
     id: 'ep_rain_three',
+    icon: '📷',
     name: 'エピソード「雨の日の三人」',
     type: ProductType.episode,
     priceYen: 320,
@@ -776,6 +865,7 @@ const _products = <ProductDef>[
   ),
   ProductDef(
     id: 'tickets_5',
+    icon: '🎫',
     name: '余白くじチケット ×5',
     type: ProductType.tickets,
     priceYen: 160,
@@ -785,6 +875,8 @@ const _products = <ProductDef>[
   ),
   ProductDef(
     id: 'tickets_11',
+    icon: '🎟️',
+    recommended: true,
     name: '余白くじチケット ×11',
     type: ProductType.tickets,
     priceYen: 320,

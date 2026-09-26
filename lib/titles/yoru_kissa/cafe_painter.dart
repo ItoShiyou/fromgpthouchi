@@ -47,22 +47,227 @@ class CafePainter extends CustomPainter {
 
   String? _at(PlacementSlot s) => placement[s];
 
+  /// 縦長の画面では、部屋（4:5）の上に天井、下に床を足して全面に描く。
+  static double roomHeight(Size size) =>
+      math.min(size.height, size.width * 1.25);
+  static double roomTop(Size size) => (size.height - roomHeight(size)) * 0.42;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width, h = size.height;
-    Rect r(Rect f) =>
-        Rect.fromLTRB(f.left * w, f.top * h, f.right * w, f.bottom * h);
+    final w = size.width;
+    final rs = Size(w, roomHeight(size));
+    final top = roomTop(size);
+    Rect r(Rect f) => Rect.fromLTRB(
+      f.left * w,
+      f.top * rs.height,
+      f.right * w,
+      f.bottom * rs.height,
+    );
     final t = animation.value;
 
-    _paintRoom(canvas, size);
+    _paintExtensions(canvas, size, top, rs.height);
+    canvas.save();
+    canvas.translate(0, top);
+    _paintRoom(canvas, rs);
     _paintWindow(canvas, r(windowRect), t);
-    _paintWallItem(canvas, size, t);
-    _paintCorner(canvas, size);
-    _paintSeat(canvas, size);
-    _paintTable(canvas, size, t);
-    _paintCounter(canvas, r(counterRect), size);
-    _paintLight(canvas, size);
-    _paintLighting(canvas, size);
+    _paintWallItem(canvas, rs, t);
+    _paintCorner(canvas, rs);
+    _paintSeat(canvas, rs);
+    _paintTable(canvas, rs, t);
+    _paintCounter(canvas, r(counterRect), rs);
+    _paintLight(canvas, rs);
+    _paintCat(canvas, rs, t);
+    _paintLighting(canvas, rs, top, size.height);
+    canvas.restore();
+  }
+
+  /// 天井（梁・吊りランプ・黒板メニュー）と、手前の床。
+  void _paintExtensions(Canvas canvas, Size size, double top, double roomH) {
+    final w = size.width;
+    if (top > 0) {
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, w, top + 1),
+        Paint()
+          ..shader = const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFCDB894), Color(0xFFE9DCC4)],
+          ).createShader(Rect.fromLTWH(0, 0, w, top + 1)),
+      );
+      final ceiling = top * 0.28;
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, w, ceiling),
+        Paint()..color = const Color(0xFF4A2F1C),
+      );
+      final beam = Paint()..color = const Color(0xFF3A2414);
+      canvas.drawRect(Rect.fromLTWH(0, ceiling - 6, w, 8), beam);
+      for (var i = 0; i < 5; i++) {
+        canvas.drawRect(
+          Rect.fromLTWH(w * (0.1 + i * 0.2) - 4, 0, 8, ceiling),
+          beam,
+        );
+      }
+      // 吊りランプ
+      for (final x in [0.16, 0.84]) {
+        final end = Offset(w * x, top * 0.62);
+        canvas.drawLine(
+          Offset(end.dx, ceiling),
+          end,
+          Paint()
+            ..color = const Color(0xFF2B2A33)
+            ..strokeWidth = 1.2,
+        );
+        final shade = Path()
+          ..moveTo(end.dx - w * 0.06, end.dy + w * 0.05)
+          ..quadraticBezierTo(
+            end.dx,
+            end.dy - w * 0.035,
+            end.dx + w * 0.06,
+            end.dy + w * 0.05,
+          )
+          ..close();
+        canvas.drawPath(shade, Paint()..color = const Color(0xFF2F4A3A));
+        canvas.drawCircle(
+          end.translate(0, w * 0.05),
+          w * 0.018,
+          Paint()..color = const Color(0xFFFFE3B0),
+        );
+      }
+      // 黒板メニュー
+      final board = Rect.fromLTWH(w * 0.34, top * 0.4, w * 0.32, top * 0.52);
+      if (board.height > 40) {
+        canvas.drawLine(
+          Offset(board.left + 8, ceiling),
+          board.topLeft.translate(8, 0),
+          Paint()..color = const Color(0xFF6B452A),
+        );
+        canvas.drawLine(
+          Offset(board.right - 8, ceiling),
+          board.topRight.translate(-8, 0),
+          Paint()..color = const Color(0xFF6B452A),
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(board.inflate(4), const Radius.circular(4)),
+          Paint()..color = const Color(0xFF6B452A),
+        );
+        canvas.drawRect(board, Paint()..color = const Color(0xFF2F3B33));
+        final tp = TextPainter(
+          text: TextSpan(
+            style: TextStyle(
+              fontSize: board.height * 0.13,
+              color: const Color(0xDDF3EBDD),
+              height: 1.35,
+            ),
+            children: const [
+              TextSpan(
+                text: 'MENU\n',
+                style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 2),
+              ),
+              TextSpan(text: 'コーヒー 450\nプリン 400\nパスタ 850'),
+            ],
+          ),
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: board.width);
+        tp.paint(
+          canvas,
+          Offset(
+            board.center.dx - tp.width / 2,
+            board.center.dy - tp.height / 2,
+          ),
+        );
+      }
+      // 部屋の天井電球のコード
+      canvas.drawLine(
+        Offset(w * 0.5, ceiling),
+        Offset(w * 0.5, top),
+        Paint()
+          ..color = const Color(0xFF2B2A33)
+          ..strokeWidth = 1.2,
+      );
+    }
+    final bottom = top + roomH;
+    if (bottom < size.height) {
+      final floor = Rect.fromLTRB(0, bottom - 1, w, size.height);
+      canvas.drawRect(floor, Paint()..color = const Color(0xFF6E4A33));
+      final plank = Paint()
+        ..color = const Color(0xFF5C3D2A)
+        ..strokeWidth = 1.2;
+      for (var y = bottom + 24.0; y < size.height; y += 26) {
+        canvas.drawLine(Offset(0, y), Offset(w, y), plank);
+      }
+    }
+  }
+
+  /// 店の猫。いつも同じあたりで寝ている。
+  void _paintCat(Canvas canvas, Size s, double t) {
+    final w = s.width, h = s.height;
+    final c = Offset(w * 0.64, h * 0.935);
+    final breathe = 1 + math.sin(t * math.pi * 2 * 3) * 0.03;
+    final fur = Paint()..color = const Color(0xFFE2A25E);
+    final dark = Paint()..color = const Color(0xFFB9763A);
+    canvas.save();
+    canvas.translate(c.dx, c.dy);
+    canvas.scale(1, breathe);
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset.zero, width: w * 0.16, height: h * 0.05),
+      fur,
+    );
+    for (var i = -1; i <= 1; i++) {
+      canvas.drawLine(
+        Offset(i * w * 0.025, -h * 0.022),
+        Offset(i * w * 0.025 + w * 0.008, h * 0.005),
+        dark..strokeWidth = 2,
+      );
+    }
+    canvas.restore();
+    // しっぽ
+    canvas.drawArc(
+      Rect.fromCenter(
+        center: c.translate(-w * 0.07, h * 0.008),
+        width: w * 0.08,
+        height: h * 0.04,
+      ),
+      math.pi * 0.2,
+      math.pi * 1.1,
+      false,
+      Paint()
+        ..color = const Color(0xFFE2A25E)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.014
+        ..strokeCap = StrokeCap.round,
+    );
+    // 頭
+    final head = c.translate(w * 0.075, -h * 0.008);
+    for (final side in [-1.0, 1.0]) {
+      final ear = Path()
+        ..moveTo(head.dx + side * w * 0.03, head.dy - h * 0.008)
+        ..lineTo(head.dx + side * w * 0.022, head.dy - h * 0.034)
+        ..lineTo(head.dx + side * w * 0.005, head.dy - h * 0.018)
+        ..close();
+      canvas.drawPath(ear, fur);
+    }
+    canvas.drawOval(
+      Rect.fromCenter(center: head, width: w * 0.07, height: h * 0.04),
+      fur,
+    );
+    final eye = Paint()
+      ..color = const Color(0xFF5A3A22)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    for (final side in [-1.0, 1.0]) {
+      canvas.drawArc(
+        Rect.fromCenter(
+          center: head.translate(side * w * 0.013, 0),
+          width: w * 0.014,
+          height: h * 0.008,
+        ),
+        0,
+        math.pi,
+        false,
+        eye,
+      );
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -939,7 +1144,7 @@ class CafePainter extends CustomPainter {
   // 照明（時間帯の暗さ＋灯り）
   // ---------------------------------------------------------------------------
 
-  void _paintLighting(Canvas canvas, Size s) {
+  void _paintLighting(Canvas canvas, Size s, double top, double fullHeight) {
     final darkness =
         switch (moment.slot) {
           TimeSlot.morning => 0.0,
@@ -949,7 +1154,7 @@ class CafePainter extends CustomPainter {
           _ => 0.5,
         } +
         (moment.weather.isWet && !_dark ? 0.12 : 0.0);
-    final whole = Offset.zero & s;
+    final whole = Rect.fromLTWH(0, -top, s.width, fullHeight);
     if (darkness > 0) {
       canvas.drawRect(
         whole,
@@ -958,6 +1163,18 @@ class CafePainter extends CustomPainter {
     }
     final lights = <(Offset, double, Color)>[
       (Offset(s.width * 0.5, s.height * 0.16), 0.5, const Color(0xFFFFD9A0)),
+      if (top > 0) ...[
+        (
+          Offset(s.width * 0.16, -top * 0.38 + s.width * 0.05),
+          0.32,
+          const Color(0xFFFFD9A0),
+        ),
+        (
+          Offset(s.width * 0.84, -top * 0.38 + s.width * 0.05),
+          0.32,
+          const Color(0xFFFFD9A0),
+        ),
+      ],
       if (_at(PlacementSlot.light) == 'stand_light')
         (
           Offset(s.width * 0.07, s.height * 0.44),

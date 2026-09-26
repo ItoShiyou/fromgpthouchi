@@ -18,60 +18,78 @@ class ShopScreen extends ConsumerWidget {
     final s = ref.watch(gameProvider);
     final c = ref.watch(contentProvider);
 
-    Widget section(ProductType type, String title) => Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SectionTitle(title),
-        for (final p in c.products.where((p) => p.type == type))
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _ProductCard(
-              product: p,
-              content: c,
-              owned: !p.consumable && s.purchasedProducts.contains(p.id),
-              onBuy: () => _buy(context, ref, p),
+    return PaperPage(
+      title: 'ショップ',
+      tabs: const ['おすすめ', 'アイテム', 'チケット'],
+      builder: (context, tab) {
+        final products = c.products.where((p) {
+          return switch (tab) {
+            0 => p.recommended,
+            1 =>
+              p.type == ProductType.pack ||
+                  p.type == ProductType.episode ||
+                  p.type == ProductType.adFree,
+            _ => p.type == ProductType.tickets,
+          };
+        }).toList();
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 20),
+          children: [
+            for (final p in products)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _ProductCard(
+                  product: p,
+                  content: c,
+                  owned: !p.consumable && s.purchasedProducts.contains(p.id),
+                  onBuy: () => _buy(context, ref, p),
+                ),
+              ),
+            const SizedBox(height: 4),
+            const Text(
+              'これはモックです。実際の決済は行われません。\n本編は無料で最後まで遊べます。',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 10,
+                color: YohakuColors.inkDim,
+                height: 1.7,
+              ),
             ),
-          ),
-      ],
-    );
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('ショップ')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-        children: [
-          section(ProductType.pack, '家具のセット'),
-          section(ProductType.episode, 'プレミアムエピソード'),
-          section(ProductType.tickets, '余白くじチケット'),
-          section(ProductType.adFree, 'そのほか'),
-          const SizedBox(height: 8),
-          const Text(
-            'これはモックです。実際の決済は行われません。',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: YohakuColors.rose),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 
   Future<void> _buy(BuildContext context, WidgetRef ref, ProductDef p) async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: YohakuColors.inkRaised,
-        title: Text(p.name),
-        content: Text('${yen(p.priceYen)} で購入します（モック：決済は発生しません）'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('やめる'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('購入する'),
-          ),
-        ],
+      builder: (ctx) => PaperDialog(
+        buttonLabel: '購入する',
+        onButton: () => Navigator.of(ctx).pop(true),
+        child: Column(
+          children: [
+            IconTile(p.icon, size: 64),
+            const SizedBox(height: 10),
+            Text(
+              p.name,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${yen(p.priceYen)} で購入します',
+              style: const TextStyle(fontSize: 13),
+            ),
+            const Text(
+              '（モック：決済は発生しません）',
+              style: TextStyle(fontSize: 10, color: YohakuColors.inkDim),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('やめる'),
+            ),
+          ],
+        ),
       ),
     );
     if (ok != true) return;
@@ -98,58 +116,54 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+    return PaperCard(
+      onTap: owned ? null : onBuy,
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          IconTile(product.icon, size: 64, background: YohakuColors.cream),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.name,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  product.description,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: YohakuColors.inkDim,
+                    height: 1.5,
                   ),
+                ),
+                if (product.itemIds.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
-                    product.description,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: YohakuColors.paperDim,
-                      height: 1.6,
-                    ),
+                    product.itemIds
+                        .map((id) => content.item(id).icon)
+                        .join(' '),
+                    style: const TextStyle(fontSize: 14),
                   ),
-                  if (product.itemIds.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: [
-                        for (final id in product.itemIds)
-                          TagPill(content.item(id).name),
-                      ],
-                    ),
-                  ],
                 ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            owned
-                ? const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Text(
-                      '購入済み',
-                      style: TextStyle(fontSize: 12, color: YohakuColors.lamp),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    owned ? '購入済み' : yen(product.priceYen),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: owned ? 12 : 15,
+                      color: owned ? YohakuColors.moss : YohakuColors.ink,
                     ),
-                  )
-                : FilledButton(
-                    onPressed: onBuy,
-                    child: Text(yen(product.priceYen)),
                   ),
-          ],
-        ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

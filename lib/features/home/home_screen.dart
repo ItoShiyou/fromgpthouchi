@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,137 +7,260 @@ import '../../core/brand/theme.dart';
 import '../../core/state/game_controller.dart';
 import '../../titles/yoru_kissa/cafe_scene.dart';
 import '../../widgets/common.dart';
+import '../../widgets/portrait.dart';
+import '../furniture/furniture_screen.dart';
+import '../gacha/gacha_screen.dart';
+import '../menu/menu_screen.dart';
+import '../report/event_dialog.dart';
+import '../report/report_dialog.dart';
+import '../settings/settings_screen.dart';
+import '../shop/shop_screen.dart';
 import '../visitors/visitor_detail_screen.dart';
+import '../visitors/visitor_list_screen.dart';
 import '../visitors/visitor_naming.dart';
+import '../zukan/zukan_screen.dart';
 
-/// 01. ホーム ― 店そのもの。
-class HomeScreen extends ConsumerWidget {
+/// 01. ホーム ― 店そのもの。ここが常に基点になる。
+///
+/// 起動・復帰時に放置時間を精算して「おかえりなさい」を出し、
+/// 開いている間も 20 秒ごとに時間を進める（新しい客が座る）。
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
+  Timer? _ticker;
+  bool _dialogOpen = false;
+
+  static const _liveInterval = Duration(seconds: 20);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pending = ref.read(gameProvider).pendingReport;
+      ref.read(gameProvider.notifier).catchUp(showReport: true);
+      // 前回開いたまま閉じた「おかえりなさい」は、精算しても listen が発火しない。
+      if (pending != null) _showReport();
+    });
+    _ticker = Timer.periodic(_liveInterval, (_) {
+      ref.read(gameProvider.notifier).catchUp(showReport: false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(gameProvider.notifier).catchUp(showReport: true);
+    }
+  }
+
+  Future<void> _showReport() async {
+    if (_dialogOpen) return;
+    final report = ref.read(gameProvider).pendingReport;
+    if (report == null) return;
+    _dialogOpen = true;
+    Navigator.of(context).popUntil((r) => r.isFirst);
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => ReportDialog(report: report),
+    );
+    _dialogOpen = false;
+    ref.read(gameProvider.notifier).dismissReport();
+    // 出来事は「おかえりなさい」のあとに 1 つずつ見せる。
+    ref.read(eventQueueProvider.notifier).addAll(report.newFragments);
+    _showEvents();
+  }
+
+  Future<void> _showEvents() async {
+    if (_dialogOpen || !mounted) return;
+    final queue = ref.read(eventQueueProvider);
+    if (queue.isEmpty) return;
+    _dialogOpen = true;
+    await showDialog<void>(
+      context: context,
+      barrierColor: Colors.black45,
+      builder: (_) => EventDialog(fragment: queue.first),
+    );
+    _dialogOpen = false;
+    ref.read(eventQueueProvider.notifier).pop();
+    _showEvents();
+  }
+
+  void _push(Widget page) =>
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(gameProvider.select((s) => s.pendingReport), (prev, next) {
+      if (next != null) _showReport();
+    });
+    ref.listen(eventQueueProvider, (prev, next) {
+      if (next.isNotEmpty) _showEvents();
+    });
+    ref.listen(noticeProvider, (prev, next) {
+      if (next == null) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(next)));
+      ref.read(noticeProvider.notifier).clear();
+    });
+
     final s = ref.watch(gameProvider);
+    ref.watch(weatherPreviewProvider);
     final ctrl = ref.read(gameProvider.notifier);
     final content = ref.watch(contentProvider);
     final ambiences = ref.watch(ambiencesProvider);
     final m = ctrl.currentMoment();
-    final now = m.time;
-    final lastFragment = s.fragments.isEmpty ? null : s.fragments.last;
+    final level = ShopLevel.of(s);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-      children: [
-        Row(
-          children: [
-            Text(
-              '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}',
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w300,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              '${m.slot.label}・${m.weather.label}・${m.season.label}',
-              style: const TextStyle(color: YohakuColors.paperDim),
-            ),
-            const Spacer(),
-            Text(
-              content.placeName,
-              style: const TextStyle(
-                fontSize: 12,
-                color: YohakuColors.paperDim,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        CafeScene(
-          content: content,
-          moment: m,
-          placement: s.placement,
-          effects: s.activeEffects,
-          seated: s.seated,
-          onGuestTap: (i) => _tapGuest(context, ref, i),
-        ),
-        const SizedBox(height: 10),
-        if (ambiences.isNotEmpty || s.activeBgm != null)
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (final a in ambiences) TagPill(a.name),
-              if (s.activeBgm != null)
-                TagPill(
-                  '♪ ${content.item(s.activeBgm!).name.replaceFirst('BGM：', '')}',
-                  color: YohakuColors.lamp,
-                ),
-            ],
-          ),
-        const SizedBox(height: 12),
-        Card(
-          child: ListTile(
-            leading: const Icon(
-              Icons.point_of_sale_outlined,
-              color: YohakuColors.lamp,
-            ),
-            title: Text('レジ  ${yen(s.register)}'),
-            subtitle: Text(
-              s.seated.isEmpty ? 'お客さんが来るのを待っています' : '席のお客さんをタップすると、お会計できます',
-              style: const TextStyle(
-                fontSize: 12,
-                color: YohakuColors.paperDim,
-              ),
-            ),
-            trailing: FilledButton.tonal(
-              onPressed: s.register == 0
-                  ? null
-                  : () {
-                      final got = ctrl.collectRegister();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${yen(got)} を回収しました')),
-                      );
-                    },
-              child: const Text('回収'),
+    return Scaffold(
+      backgroundColor: YohakuColors.nightDeep,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: CafeScene(
+              content: content,
+              moment: m,
+              placement: s.placement,
+              effects: s.activeEffects,
+              seated: s.seated,
+              onGuestTap: _tapGuest,
             ),
           ),
-        ),
-        if (lastFragment != null) ...[
-          const SectionTitle('さいきんの出来事'),
-          Card(
+          // 上部 HUD
+          SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+              padding: const EdgeInsets.fromLTRB(10, 6, 6, 0),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    content.story(lastFragment.chainId).title,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: YohakuColors.lamp,
-                      letterSpacing: 1,
-                    ),
+                  _LevelCard(
+                    level: level,
+                    caption:
+                        '${m.time.hour.toString().padLeft(2, '0')}:${m.time.minute.toString().padLeft(2, '0')}  ${m.slot.label}・${m.weather.label}',
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    content
-                        .story(lastFragment.chainId)
-                        .steps[lastFragment.step]
-                        .text,
-                    style: const TextStyle(height: 1.8),
+                  const Spacer(),
+                  _HudPill(
+                    icon: Icons.monetization_on,
+                    color: YohakuColors.lamp,
+                    label: yen(s.money).substring(1),
+                  ),
+                  const SizedBox(width: 6),
+                  _HudPill(
+                    icon: Icons.confirmation_number,
+                    color: const Color(0xFF8EC5E8),
+                    label: '${s.tickets}',
+                  ),
+                  IconButton(
+                    tooltip: '設定',
+                    icon: const Icon(Icons.settings, color: YohakuColors.paper),
+                    onPressed: () => _push(const SettingsScreen()),
                   ),
                 ],
               ),
             ),
           ),
+          // 下部：レジ・雰囲気・アイコン列
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (ambiences.isNotEmpty || s.activeBgm != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final a in ambiences) _GlassChip(a.name),
+                            if (s.activeBgm != null)
+                              _GlassChip(
+                                '♪ ${content.item(s.activeBgm!).name.replaceFirst('BGM：', '')}',
+                              ),
+                          ],
+                        ),
+                      ),
+                    _RegisterBar(
+                      amount: s.register,
+                      hint: s.seated.isEmpty ? 'お客さんを待っています' : 'お客さんをタップしてお会計',
+                      onCollect: s.register == 0
+                          ? null
+                          : () {
+                              final got = ctrl.collectRegister();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('${yen(got)} を回収しました')),
+                              );
+                            },
+                    ),
+                    if (!s.adFree) ...[
+                      const SizedBox(height: 6),
+                      const AdBannerMock(),
+                    ],
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _BarButton(
+                          icon: Icons.people_alt_outlined,
+                          label: 'お客様',
+                          onTap: () => _push(const VisitorListScreen()),
+                        ),
+                        _BarButton(
+                          icon: Icons.menu_book_outlined,
+                          label: '図鑑',
+                          onTap: () => _push(const ZukanScreen()),
+                        ),
+                        _BarButton(
+                          icon: Icons.chair_outlined,
+                          label: '家具',
+                          onTap: () => _push(const FurnitureScreen()),
+                        ),
+                        _BarButton(
+                          icon: Icons.local_cafe_outlined,
+                          label: 'メニュー',
+                          onTap: () => _push(const MenuScreen()),
+                        ),
+                        _BarButton(
+                          icon: Icons.redeem_outlined,
+                          label: 'くじ',
+                          onTap: () => _push(const GachaScreen()),
+                        ),
+                        _BarButton(
+                          icon: Icons.shopping_bag_outlined,
+                          label: 'ショップ',
+                          onTap: () => _push(const ShopScreen()),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
-        if (!s.adFree) ...[const SizedBox(height: 16), const AdBannerMock()],
-      ],
+      ),
     );
   }
 
-  void _tapGuest(BuildContext context, WidgetRef ref, int index) {
+  void _tapGuest(int index) {
     final ctrl = ref.read(gameProvider.notifier);
     final content = ref.read(contentProvider);
     final guest = ctrl.collectGuest(index);
@@ -149,110 +274,295 @@ class HomeScreen extends ConsumerWidget {
     showDialog<void>(
       context: context,
       barrierColor: Colors.black38,
-      builder: (ctx) => _GuestDialog(
-        name: def == null ? '通りすがりのお客さん' : visitorDisplayName(def, rec),
-        line: line,
-        menu: content.menu(guest.visit.menuId).name,
-        bill: guest.bill,
-        color: Color(def?.colorValue ?? 0xFF6B6E78),
-        visits: rec?.visits,
-        onDetail: id == null
-            ? null
-            : () {
-                Navigator.of(ctx).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => VisitorDetailScreen(visitorId: id),
+      builder: (ctx) => PaperDialog(
+        buttonLabel: '閉じる',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Portrait(
+                  look:
+                      def?.look ??
+                      anonymousLook(
+                        guest.visit.at.millisecondsSinceEpoch ~/ 60000,
+                      ),
+                  size: 52,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        def == null
+                            ? '通りすがりのお客さん'
+                            : visitorDisplayName(def, rec),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      if (rec != null)
+                        Text(
+                          '来店 ${rec.visits} 回',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: YohakuColors.inkDim,
+                          ),
+                        ),
+                    ],
                   ),
-                );
-              },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text('「$line」', style: const TextStyle(height: 1.8)),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Text(content.menu(guest.visit.menuId).icon),
+                const SizedBox(width: 6),
+                Text(
+                  content.menu(guest.visit.menuId).name,
+                  style: const TextStyle(color: YohakuColors.inkDim),
+                ),
+                const Spacer(),
+                Text(
+                  '+${yen(guest.bill)}',
+                  style: const TextStyle(
+                    color: YohakuColors.wood,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+            if (id != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    _push(VisitorDetailScreen(visitorId: id));
+                  },
+                  child: const Text('この人のこと ›'),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _GuestDialog extends StatelessWidget {
-  const _GuestDialog({
-    required this.name,
-    required this.line,
-    required this.menu,
-    required this.bill,
-    required this.color,
-    required this.visits,
-    required this.onDetail,
-  });
+const _glass = Color(0xB3261B14);
 
-  final String name;
-  final String line;
-  final String menu;
-  final int bill;
-  final Color color;
-  final int? visits;
-  final VoidCallback? onDetail;
+class _LevelCard extends StatelessWidget {
+  const _LevelCard({required this.level, required this.caption});
+
+  final ShopLevel level;
+  final String caption;
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: YohakuColors.inkRaised,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Container(
+      width: 132,
+      padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
+      decoration: BoxDecoration(
+        color: _glass,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.storefront, size: 14, color: YohakuColors.lamp),
+              const SizedBox(width: 4),
+              Text(
+                'Lv.${level.level}',
+                style: const TextStyle(
+                  color: YohakuColors.paper,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ProgressLine(
+            value: level.progress,
+            color: YohakuColors.moss,
+            height: 5,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            caption,
+            style: const TextStyle(fontSize: 10, color: Color(0xCCF5EDE0)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HudPill extends StatelessWidget {
+  const _HudPill({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.fromLTRB(4, 3, 10, 3),
+      decoration: BoxDecoration(
+        color: _glass,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: YohakuColors.paper,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GlassChip extends StatelessWidget {
+  const _GlassChip(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: _glass,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: YohakuColors.lamp.withValues(alpha: 0.6)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 11, color: YohakuColors.cream),
+      ),
+    );
+  }
+}
+
+class _RegisterBar extends StatelessWidget {
+  const _RegisterBar({
+    required this.amount,
+    required this.hint,
+    required this.onCollect,
+  });
+
+  final int amount;
+  final String hint;
+  final VoidCallback? onCollect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+      decoration: BoxDecoration(
+        color: YohakuColors.paper.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.point_of_sale, color: YohakuColors.wood, size: 22),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(radius: 14, backgroundColor: color),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                Text(
+                  'レジ  ${yen(amount)}',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                Text(
+                  hint,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: YohakuColors.inkDim,
                   ),
                 ),
-                if (visits != null)
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 34,
+            child: FilledButton(onPressed: onCollect, child: const Text('回収')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BarButton extends StatelessWidget {
+  const _BarButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        child: Material(
+          color: _glass,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: YohakuColors.cream.withValues(alpha: 0.55)),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: onTap,
+            child: SizedBox(
+              height: 58,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: YohakuColors.cream, size: 24),
+                  const SizedBox(height: 3),
                   Text(
-                    '来店 $visits 回',
+                    label,
                     style: const TextStyle(
-                      fontSize: 11,
-                      color: YohakuColors.paperDim,
+                      fontSize: 10,
+                      color: YohakuColors.cream,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            Text('「$line」', style: const TextStyle(height: 1.8)),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Text(
-                  menu,
-                  style: const TextStyle(color: YohakuColors.paperDim),
-                ),
-                const Spacer(),
-                Text(
-                  '+${yen(bill)}',
-                  style: const TextStyle(
-                    color: YohakuColors.lamp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (onDetail != null)
-                  TextButton(onPressed: onDetail, child: const Text('この人のこと')),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('閉じる'),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );

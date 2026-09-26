@@ -35,6 +35,56 @@ class NoticeController extends Notifier<String?> {
   void clear() => state = null;
 }
 
+/// 「特別な出来事」ポップアップの順番待ち（保存しない）。
+final eventQueueProvider =
+    NotifierProvider<EventQueueController, List<DiscoveredFragment>>(
+      EventQueueController.new,
+    );
+
+class EventQueueController extends Notifier<List<DiscoveredFragment>> {
+  @override
+  List<DiscoveredFragment> build() => const [];
+
+  void addAll(Iterable<DiscoveredFragment> f) => state = [...state, ...f];
+
+  void pop() => state = state.isEmpty ? state : state.sublist(1);
+}
+
+/// 試遊用：店の絵の天気だけを差し替えて見る（計算には影響しない）。
+final weatherPreviewProvider = NotifierProvider<WeatherPreview, Weather?>(
+  WeatherPreview.new,
+);
+
+class WeatherPreview extends Notifier<Weather?> {
+  @override
+  Weather? build() => null;
+
+  void set(Weather? w) => state = w;
+}
+
+/// 店の「思い出」レベル。見た目の進み具合だけで、性能には影響しない。
+class ShopLevel {
+  const ShopLevel(this.level, this.progress);
+
+  final int level;
+  final double progress;
+
+  static const pointsPerLevel = 20;
+
+  factory ShopLevel.of(GameState s) {
+    final pts =
+        s.visitors.length * 4 +
+        s.fragments.length * 5 +
+        s.ownedItems.length * 2 +
+        s.ownedMenus.length * 2 +
+        s.visitors.values.fold<int>(0, (a, v) => a + (v.visits ~/ 5));
+    return ShopLevel(
+      1 + pts ~/ pointsPerLevel,
+      (pts % pointsPerLevel) / pointsPerLevel,
+    );
+  }
+}
+
 /// 今、成立している雰囲気。
 final ambiencesProvider = Provider<List<AmbienceDef>>((ref) {
   final content = ref.watch(contentProvider);
@@ -71,7 +121,17 @@ class GameController extends Notifier<GameState> {
   DateTime now() =>
       DateTime.now().add(Duration(minutes: state.debugOffsetMinutes));
 
-  WorldMoment currentMoment() => WorldEngine(_content).momentAt(now());
+  WorldMoment currentMoment() {
+    final m = WorldEngine(_content).momentAt(now());
+    final preview = ref.read(weatherPreviewProvider);
+    if (preview == null) return m;
+    return WorldMoment(
+      time: m.time,
+      slot: m.slot,
+      weather: preview,
+      season: m.season,
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // 放置
@@ -87,8 +147,7 @@ class GameController extends Notifier<GameState> {
     if (showReport && longEnough) {
       next = next.copyWith(pendingReport: _merge(state.pendingReport, r));
     } else if (r.newFragments.isNotEmpty) {
-      final chain = _content.story(r.newFragments.last.chainId);
-      ref.read(noticeProvider.notifier).show('新しい出来事：「${chain.title}」');
+      ref.read(eventQueueProvider.notifier).addAll(r.newFragments);
     } else if (r.newVisitorIds.isNotEmpty) {
       final v = _content.visitor(r.newVisitorIds.last);
       ref.read(noticeProvider.notifier).show('はじめてのお客さん：${v.silhouetteName}');

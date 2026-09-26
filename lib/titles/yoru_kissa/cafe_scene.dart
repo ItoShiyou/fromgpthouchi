@@ -4,9 +4,11 @@ import '../../core/brand/theme.dart';
 import '../../core/models/content.dart';
 import '../../core/models/world.dart';
 import '../../core/state/game_state.dart';
+import '../../widgets/portrait.dart';
 import 'cafe_painter.dart';
 
 /// 店の画面。背景レイヤー（CafePainter）の上に、タップできる客を重ねる。
+/// 与えられた領域いっぱいに描く（縦長なら天井と床を足す）。
 class CafeScene extends StatefulWidget {
   const CafeScene({
     super.key,
@@ -16,6 +18,7 @@ class CafeScene extends StatefulWidget {
     required this.effects,
     required this.seated,
     required this.onGuestTap,
+    this.showBubble = true,
   });
 
   final TitleContent content;
@@ -24,6 +27,7 @@ class CafeScene extends StatefulWidget {
   final Set<String> effects;
   final List<SeatedGuest> seated;
   final void Function(int index) onGuestTap;
+  final bool showBubble;
 
   @override
   State<CafeScene> createState() => _CafeSceneState();
@@ -44,158 +48,168 @@ class _CafeSceneState extends State<CafeScene>
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 4 / 5,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: LayoutBuilder(
-          builder: (context, c) {
-            final w = c.maxWidth, h = c.maxHeight;
-            return Stack(
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: CafePainter(
-                      moment: widget.moment,
-                      placement: widget.placement,
-                      effects: widget.effects,
-                      animation: _anim,
-                    ),
-                  ),
+    return LayoutBuilder(
+      builder: (context, c) {
+        final size = Size(c.maxWidth, c.maxHeight);
+        final top = CafePainter.roomTop(size);
+        final roomH = CafePainter.roomHeight(size);
+        // 吹き出しは、いちばん最近来た客の上に出す。
+        final bubbleIndex = widget.seated.isEmpty
+            ? -1
+            : widget.seated.length - 1;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: CafePainter(
+                  moment: widget.moment,
+                  placement: widget.placement,
+                  effects: widget.effects,
+                  animation: _anim,
                 ),
-                for (var i = 0; i < widget.seated.length; i++)
-                  _positioned(i, w, h),
-              ],
-            );
-          },
-        ),
-      ),
+              ),
+            ),
+            for (var i = 0; i < widget.seated.length; i++)
+              _guest(
+                i,
+                size.width,
+                top,
+                roomH,
+                bubble: widget.showBubble && i == bubbleIndex,
+              ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _positioned(int i, double w, double h) {
+  Widget _guest(
+    int i,
+    double w,
+    double top,
+    double roomH, {
+    required bool bubble,
+  }) {
     final g = widget.seated[i];
     final anchors = CafePainter.guestAnchors;
     final anchor = anchors[(g.seat < 0 ? i : g.seat) % anchors.length];
-    final def = g.visit.visitorId == null
-        ? null
-        : widget.content.visitor(g.visit.visitorId!);
-    final size = w * 0.16;
+    final id = g.visit.visitorId;
+    final def = id == null ? null : widget.content.visitor(id);
+    final look =
+        def?.look ?? anonymousLook(g.visit.at.millisecondsSinceEpoch ~/ 60000);
+    final size = w * 0.2;
+    final line = def == null
+        ? 'おいしいコーヒーで、ほっと一息……'
+        : def.lines[g.visit.at.minute % def.lines.length];
+    final left = anchor.dx * w - size / 2;
     return Positioned(
-      left: anchor.dx * w - size / 2,
-      top: anchor.dy * h - size * 0.4,
+      left: left,
+      top: top + anchor.dy * roomH - size * 0.55,
       width: size,
-      height: size * 1.55,
-      child: GuestFigure(
-        key: ValueKey('${g.visit.at.toIso8601String()}-$i'),
-        color: Color(def?.colorValue ?? 0xFF6B6E78),
-        bill: g.bill,
-        named: def != null,
+      height: size * 1.2,
+      child: GestureDetector(
         onTap: () => widget.onGuestTap(i),
+        behavior: HitTestBehavior.opaque,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
+          children: [
+            Positioned(
+              top: size * 0.2,
+              left: 0,
+              right: 0,
+              height: size,
+              child: TweenAnimationBuilder<double>(
+                key: ValueKey(g.visit.at),
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 500),
+                builder: (context, v, child) => Opacity(
+                  opacity: v,
+                  child: Transform.translate(
+                    offset: Offset(0, (1 - v) * 8),
+                    child: child,
+                  ),
+                ),
+                child: CustomPaint(painter: PortraitPainter(look: look)),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              child: _CoinBadge(bill: g.bill, named: def != null),
+            ),
+            if (bubble)
+              Positioned(
+                bottom: size * 1.28,
+                // 画面からはみ出さない位置に寄せる（吹き出しは最大幅 190）。
+                left: (-size * 0.6).clamp(-left + 8, w - 198 - left),
+                child: _SpeechBubble(text: line),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// 客のシルエット＋会計バッジ。
-class GuestFigure extends StatelessWidget {
-  const GuestFigure({
-    super.key,
-    required this.color,
-    required this.bill,
-    required this.named,
-    required this.onTap,
-  });
+class _CoinBadge extends StatelessWidget {
+  const _CoinBadge({required this.bill, required this.named});
 
-  final Color color;
   final int bill;
   final bool named;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 500),
-        builder: (context, v, child) => Opacity(
-          opacity: v,
-          child: Transform.translate(
-            offset: Offset(0, (1 - v) * 8),
-            child: child,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: YohakuColors.paper,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: YohakuColors.lamp, width: 1.5),
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (named)
+            const Icon(Icons.auto_awesome, size: 10, color: YohakuColors.lamp),
+          Text(
+            yen(bill),
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: YohakuColors.ink,
+            ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SpeechBubble extends StatelessWidget {
+  const _SpeechBubble({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 190),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: YohakuColors.paper.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8)],
         ),
-        child: LayoutBuilder(
-          builder: (context, c) {
-            final s = c.maxWidth;
-            return Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.topCenter,
-              children: [
-                Positioned(
-                  top: s * 0.32,
-                  child: Container(
-                    width: s * 0.42,
-                    height: s * 0.42,
-                    decoration: BoxDecoration(
-                      color: Color.lerp(color, Colors.white, 0.35),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: s * 0.7,
-                  child: Container(
-                    width: s * 0.7,
-                    height: s * 0.8,
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(s * 0.35),
-                        bottom: Radius.circular(s * 0.08),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: YohakuColors.lamp,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black26, blurRadius: 4),
-                      ],
-                    ),
-                    child: Text(
-                      yen(bill),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: YohakuColors.ink,
-                      ),
-                    ),
-                  ),
-                ),
-                if (named)
-                  Positioned(
-                    top: s * 0.36,
-                    right: s * 0.12,
-                    child: const Icon(
-                      Icons.auto_awesome,
-                      size: 12,
-                      color: YohakuColors.lamp,
-                    ),
-                  ),
-              ],
-            );
-          },
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 11,
+            height: 1.5,
+            color: YohakuColors.ink,
+          ),
         ),
       ),
     );

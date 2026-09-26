@@ -54,11 +54,15 @@ class ItemDef {
     this.tags = const [],
     this.price,
     this.source = ItemSource.coin,
+    this.icon = '📦',
   });
 
   final String id;
   final String name;
   final ItemKind kind;
+
+  /// 図鑑・家具一覧のアイコン（モックでは絵文字。本番はイラストに差し替え）。
+  final String icon;
   final PlacementSlot? slot;
 
   /// 雰囲気タグの材料。家具に「性能」は持たせず、タグだけ持たせる。
@@ -104,12 +108,23 @@ class AmbienceDef {
 // メニュー
 // ---------------------------------------------------------------------------
 
+enum MenuCategory {
+  drink('ドリンク'),
+  food('フード'),
+  sweets('スイーツ');
+
+  const MenuCategory(this.label);
+  final String label;
+}
+
 class MenuDef {
   const MenuDef({
     required this.id,
     required this.name,
     required this.price,
     required this.description,
+    required this.category,
+    required this.icon,
     this.unlockCost = 0,
   });
 
@@ -122,21 +137,46 @@ class MenuDef {
   /// レシピを覚えるコスト。0 なら最初から出せる。
   final int unlockCost;
   final String description;
+  final MenuCategory category;
+  final String icon;
 }
 
 // ---------------------------------------------------------------------------
 // 客
 // ---------------------------------------------------------------------------
 
+enum HairStyle { short, long, bob, bun, ponytail, gray, cap }
+
+/// 似顔絵の見た目。モックではコードで描き、本番はイラストに差し替える。
+class VisitorLook {
+  const VisitorLook({
+    required this.hair,
+    required this.clothes,
+    this.style = HairStyle.short,
+    this.skin = 0xFFF4D6BE,
+    this.accent,
+    this.glasses = false,
+  });
+
+  final int hair;
+  final int clothes;
+  final HairStyle style;
+  final int skin;
+
+  /// ネクタイ・スカーフなどの差し色。
+  final int? accent;
+  final bool glasses;
+}
+
 class VisitorDef {
   const VisitorDef({
+    required this.look,
     required this.id,
     required this.name,
     required this.silhouetteName,
     required this.profile,
     required this.lines,
     required this.slots,
-    required this.colorValue,
     this.favoriteMenuId,
     this.weathers,
     this.baseWeight = 1.0,
@@ -147,7 +187,13 @@ class VisitorDef {
     this.weekendBoost = 1.0,
     this.requiredAmbience,
     this.premiumEpisodeId,
+    this.special = false,
   });
+
+  final VisitorLook look;
+
+  /// 天気や条件が揃わないと来ない「特別」な客。
+  final bool special;
 
   final String id;
 
@@ -182,9 +228,6 @@ class VisitorDef {
 
   /// プレミアムエピソード購入で初めて登場する客。
   final String? premiumEpisodeId;
-
-  /// 見た目用の色（ARGB）。
-  final int colorValue;
 }
 
 // ---------------------------------------------------------------------------
@@ -323,7 +366,14 @@ class ProductDef {
     this.tickets = 0,
     this.episodeId,
     this.consumable = false,
+    this.icon = '🎁',
+    this.recommended = false,
   });
+
+  final String icon;
+
+  /// ショップの「おすすめ」に出すか。
+  final bool recommended;
 
   final String id;
   final String name;

@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/brand/theme.dart';
 import '../../core/state/game_controller.dart';
 import '../../widgets/common.dart';
+import '../../widgets/portrait.dart';
 import 'visitor_detail_screen.dart';
 import 'visitor_naming.dart';
 
-/// 03. 客一覧 ― 来店した人。
+/// 03. 来店客一覧。
 class VisitorListScreen extends ConsumerWidget {
   const VisitorListScreen({super.key});
 
@@ -25,85 +26,176 @@ class VisitorListScreen extends ConsumerWidget {
           ),
         );
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      children: [
-        SectionTitle('常連さん  ${known.length}'),
-        if (known.isEmpty)
-          const EmptyNote('まだ誰も来ていません。\nアプリを閉じて、しばらくしてからのぞいてみてください。'),
-        for (final v in known)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Card(
-              child: ListTile(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => VisitorDetailScreen(visitorId: v.id),
-                  ),
-                ),
-                leading: CircleAvatar(backgroundColor: Color(v.colorValue)),
-                title: Text(visitorDisplayName(v, s.visitors[v.id])),
-                subtitle: Text(
-                  '来店 ${s.visitors[v.id]!.visits} 回・${_ago(ref.read(gameProvider.notifier).now(), s.visitors[v.id]!.lastSeenAt)}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: YohakuColors.paperDim,
-                  ),
-                ),
-                trailing: const Icon(Icons.chevron_right),
+    return PaperPage(
+      title: '来店客一覧',
+      showClose: true,
+      tabs: const ['すべて', '常連', '特別'],
+      builder: (context, tab) {
+        final list = known.where((v) {
+          final rec = s.visitors[v.id]!;
+          return switch (tab) {
+            1 => rec.visits >= nameRevealVisits,
+            2 => v.special,
+            _ => true,
+          };
+        }).toList();
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 20),
+          children: [
+            if (list.isEmpty)
+              EmptyNote(
+                tab == 0
+                    ? 'まだ誰も来ていません。\nアプリを閉じて、しばらくしてからのぞいてみてください。'
+                    : tab == 1
+                    ? '何度か来てくれると、常連さんになります。'
+                    : '特別なお客さんは、天気や時間がそろった時にだけ現れます。',
               ),
-            ),
-          ),
-        const SectionTitle('さいきんの来店'),
-        if (s.recentVisits.isEmpty) const EmptyNote('来店の記録はまだありません。'),
-        for (final v in s.recentVisits.take(20))
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 72,
-                  child: Text(
-                    '${v.at.month}/${v.at.day} ${v.at.hour.toString().padLeft(2, '0')}:${v.at.minute.toString().padLeft(2, '0')}',
+            for (final v in list) ...[
+              _VisitorRow(visitorId: v.id),
+              const Divider(height: 1),
+            ],
+            if (tab == 0 && s.recentVisits.isNotEmpty) ...[
+              const SectionTitle('さいきんの来店'),
+              for (final visit in s.recentVisits.take(12))
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 64,
+                        child: Text(
+                          '${visit.at.month}/${visit.at.day} ${visit.at.hour.toString().padLeft(2, '0')}:${visit.at.minute.toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: YohakuColors.inkDim,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          visit.visitorId == null
+                              ? '通りすがりのお客さん'
+                              : visitorDisplayName(
+                                  content.visitor(visit.visitorId!),
+                                  s.visitors[visit.visitorId],
+                                ),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: visit.visitorId == null
+                                ? YohakuColors.inkDim
+                                : YohakuColors.ink,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${content.menu(visit.menuId).icon} ${content.menu(visit.menuId).name}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: YohakuColors.inkDim,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _VisitorRow extends ConsumerWidget {
+  const _VisitorRow({required this.visitorId});
+
+  final String visitorId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(gameProvider);
+    final c = ref.watch(contentProvider);
+    final def = c.visitor(visitorId);
+    final rec = s.visitors[visitorId]!;
+    final profile = unlockedProfile(def, rec);
+    final fav = def.favoriteMenuId;
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => VisitorDetailScreen(visitorId: visitorId),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Portrait(look: def.look, size: 58),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          visitorDisplayName(def, rec),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      if (rec.visits <= 1) const NewBadge(),
+                      if (def.special)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: TagPill('特別', color: YohakuColors.moss),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    fav != null && rec.favoriteKnown
+                        ? c.menu(fav).name
+                        : '好きなもの：？？？',
                     style: const TextStyle(
                       fontSize: 11,
-                      color: YohakuColors.paperDim,
+                      color: YohakuColors.inkDim,
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Text(
-                    v.visitorId == null
-                        ? '通りすがりのお客さん'
-                        : visitorDisplayName(
-                            content.visitor(v.visitorId!),
-                            s.visitors[v.visitorId],
-                          ),
-                    style: TextStyle(
-                      color: v.visitorId == null
-                          ? YohakuColors.paperDim
-                          : YohakuColors.paper,
+                  if (profile.isNotEmpty)
+                    Text(
+                      profile.last,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: YohakuColors.inkDim,
+                      ),
                     ),
-                  ),
-                ),
+                ],
+              ),
+            ),
+            Column(
+              children: [
                 Text(
-                  content.menu(v.menuId).name,
+                  '${rec.visits}',
                   style: const TextStyle(
-                    fontSize: 12,
-                    color: YohakuColors.paperDim,
+                    fontWeight: FontWeight.w800,
+                    color: YohakuColors.wood,
                   ),
+                ),
+                const Text(
+                  '回',
+                  style: TextStyle(fontSize: 9, color: YohakuColors.inkDim),
                 ),
               ],
             ),
-          ),
-      ],
+          ],
+        ),
+      ),
     );
-  }
-
-  static String _ago(DateTime now, DateTime t) {
-    final d = now.difference(t);
-    if (d.inMinutes < 60) return '${d.inMinutes} 分前';
-    if (d.inHours < 24) return '${d.inHours} 時間前';
-    return '${d.inDays} 日前';
   }
 }
