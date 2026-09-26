@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/brand/handdrawn.dart';
 
 import '../../core/brand/theme.dart';
+import '../../core/services/ads.dart';
 import '../../core/state/game_controller.dart';
 import '../../core/state/purchase_controller.dart';
 import '../../titles/yoru_kissa/cafe_scene.dart';
@@ -228,7 +229,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     if (!s.adFree) ...[
                       const SizedBox(height: 6),
-                      const AdBannerMock(),
+                      const Center(
+                        child: ShopBanner(placeholder: AdBannerMock()),
+                      ),
                     ],
                     const SizedBox(height: 8),
                     Row(

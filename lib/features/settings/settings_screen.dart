@@ -6,6 +6,7 @@ import '../../core/brand/handdrawn.dart';
 
 import '../../core/brand/theme.dart';
 import '../../core/models/world.dart';
+import '../../core/services/ads.dart';
 import '../../core/state/game_controller.dart';
 import '../../widgets/common.dart';
 import '../series/series_screen.dart';
@@ -88,6 +89,16 @@ class SettingsScreen extends ConsumerWidget {
                   context,
                 ).showSnackBar(const SnackBar(content: Text('セーブデータをコピーしました')));
               },
+            ),
+            FutureBuilder<bool>(
+              future: adPrivacyOptionsRequired(),
+              builder: (context, snap) => snap.data == true
+                  ? ListTile(
+                      title: const Text('広告の同意設定'),
+                      trailing: const SketchIcon(Sketch.forward, size: 20),
+                      onTap: showAdPrivacyOptions,
+                    )
+                  : const SizedBox.shrink(),
             ),
             ListTile(
               leading: const SketchIcon(Sketch.book, color: YohakuColors.wood),
