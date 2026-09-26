@@ -139,7 +139,7 @@ class _ItemCell extends StatelessWidget {
         children: [
           Column(
             children: [
-              IconTile(item.icon, size: 54, locked: !visible),
+              IconTile(item.icon, size: 54, locked: !visible, artId: item.id),
               const SizedBox(height: 4),
               Text(
                 visible ? item.name : '？？？',

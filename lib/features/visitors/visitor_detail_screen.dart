@@ -63,6 +63,7 @@ class _VisitorDetailScreenState extends ConsumerState<VisitorDetailScreen> {
                         right: 24,
                         bottom: 0,
                         child: Portrait(
+                          visitorId: def.id,
                           look: def.look,
                           size: 190,
                           locked: !met,
@@ -183,6 +184,7 @@ class _VisitorDetailScreenState extends ConsumerState<VisitorDetailScreen> {
                       : '',
                   size: 40,
                   locked: !(fav != null && rec.favoriteKnown),
+                  artId: fav,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

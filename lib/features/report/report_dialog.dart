@@ -103,7 +103,11 @@ class ReportDialog extends ConsumerWidget {
                 for (final id in r.newVisitorIds)
                   Column(
                     children: [
-                      Portrait(look: content.visitor(id).look, size: 46),
+                      Portrait(
+                        visitorId: id,
+                        look: content.visitor(id).look,
+                        size: 46,
+                      ),
                       const SizedBox(height: 4),
                       Text(
                         content.visitor(id).silhouetteName,

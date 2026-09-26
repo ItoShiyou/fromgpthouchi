@@ -71,6 +71,18 @@ flutter:
 
   assets:
     - assets/audio/
+    # 本番イラスト（無ければコードの絵を使う）。置き方は docs/ART_GUIDE.md
+    - assets/art/yoru_kissa/
+    - assets/art/yoru_kissa/room/
+    - assets/art/yoru_kissa/window/
+    - assets/art/yoru_kissa/wall/
+    - assets/art/yoru_kissa/light/
+    - assets/art/yoru_kissa/seat/
+    - assets/art/yoru_kissa/table/
+    - assets/art/yoru_kissa/corner/
+    - assets/art/yoru_kissa/counter/
+    - assets/art/yoru_kissa/visitors/
+    - assets/art/yoru_kissa/icons/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

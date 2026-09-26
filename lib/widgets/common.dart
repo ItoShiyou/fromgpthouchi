@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/art/art_library.dart';
 import '../core/brand/handdrawn.dart';
 import '../core/brand/theme.dart';
 
@@ -288,15 +289,33 @@ class PaperCard extends StatelessWidget {
 
 /// 家具・メニュー・商品の「しるし」。
 class IconTile extends StatelessWidget {
-  const IconTile(this.icon, {super.key, this.size = 52, this.locked = false});
+  const IconTile(
+    this.icon, {
+    super.key,
+    this.size = 52,
+    this.locked = false,
+    this.artId,
+  });
 
   final String icon;
   final double size;
   final bool locked;
 
+  /// 本番のアイコン画像があればそれを使う（assets/art/…/icons/{id}.png）。
+  final String? artId;
+
   @override
-  Widget build(BuildContext context) =>
-      InkGlyph(icon, size: size, locked: locked);
+  Widget build(BuildContext context) {
+    final path = artId == null ? null : Art.current.icon(artId!);
+    if (path == null || locked) {
+      return InkGlyph(icon, size: size, locked: locked);
+    }
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Image.asset(path, fit: BoxFit.contain),
+    );
+  }
 }
 
 class SectionTitle extends StatelessWidget {

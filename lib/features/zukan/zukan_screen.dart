@@ -89,6 +89,7 @@ class ZukanScreen extends ConsumerWidget {
                             )
                           : '？？？',
                       image: Portrait(
+                        visitorId: visitors[i].id,
                         look: visitors[i].look,
                         size: 66,
                         locked: !s.visitors.containsKey(visitors[i].id),
@@ -110,6 +111,7 @@ class ZukanScreen extends ConsumerWidget {
                           : '？？？',
                       image: IconTile(
                         c.items[i].icon,
+                        artId: c.items[i].id,
                         size: 66,
                         locked: !s.ownedItems.contains(c.items[i].id),
                       ),
@@ -125,6 +127,7 @@ class ZukanScreen extends ConsumerWidget {
                           : '？？？',
                       image: IconTile(
                         c.menus[i].icon,
+                        artId: c.menus[i].id,
                         size: 66,
                         locked: !s.ownedMenus.contains(c.menus[i].id),
                       ),
@@ -171,7 +174,7 @@ class ZukanScreen extends ConsumerWidget {
         buttonLabel: '閉じる',
         child: Column(
           children: [
-            IconTile(i.icon, size: 80, locked: !owned),
+            IconTile(i.icon, size: 80, locked: !owned, artId: i.id),
             const SizedBox(height: 12),
             Text(
               owned ? i.name : '？？？',

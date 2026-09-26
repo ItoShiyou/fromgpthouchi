@@ -315,7 +315,7 @@ class _GachaScreenState extends ConsumerState<GachaScreen>
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: Row(
                   children: [
-                    IconTile(c.item(e.itemId).icon, size: 22),
+                    IconTile(c.item(e.itemId).icon, size: 22, artId: e.itemId),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -458,7 +458,7 @@ class _ResultCard extends StatelessWidget {
         children: [
           Column(
             children: [
-              IconTile(item.icon, size: 40),
+              IconTile(item.icon, size: 40, artId: item.id),
               const SizedBox(height: 4),
               Text(
                 item.name,

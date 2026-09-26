@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/art/art_library.dart';
 import '../../core/brand/handdrawn.dart';
 
 import '../../core/brand/theme.dart';
@@ -62,16 +63,7 @@ class _CafeSceneState extends State<CafeScene>
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            Positioned.fill(
-              child: CustomPaint(
-                painter: CafePainter(
-                  moment: widget.moment,
-                  placement: widget.placement,
-                  effects: widget.effects,
-                  animation: _anim,
-                ),
-              ),
-            ),
+            ..._layers(size.width, top, roomH),
             const Positioned.fill(child: PaperGrain(opacity: 1.4)),
             for (var i = 0; i < widget.seated.length; i++)
               _guest(
@@ -85,6 +77,59 @@ class _CafeSceneState extends State<CafeScene>
         );
       },
     );
+  }
+
+  /// 本番イラストが無ければコードの絵 1 枚。あれば「背景 → 絵 → 照明」の順に重ねる。
+  List<Widget> _layers(double w, double top, double roomH) {
+    final art = Art.current;
+    final room = art.roomBase;
+    const order = [
+      PlacementSlot.window,
+      PlacementSlot.wall,
+      PlacementSlot.corner,
+      PlacementSlot.seat,
+      PlacementSlot.table,
+      PlacementSlot.counter,
+      PlacementSlot.light,
+    ];
+    final pictures = <PlacementSlot, String>{};
+    for (final slot in order) {
+      final id = widget.placement[slot];
+      final path = id == null ? null : art.furniture(slot.name, id);
+      if (path != null) pictures[slot] = path;
+    }
+    CafePainter painter(CafePass pass) => CafePainter(
+      moment: widget.moment,
+      placement: widget.placement,
+      effects: widget.effects,
+      animation: _anim,
+      pass: pass,
+      artSlots: pictures.keys.toSet(),
+      roomArt: room != null,
+    );
+    if (room == null && pictures.isEmpty) {
+      return [
+        Positioned.fill(child: CustomPaint(painter: painter(CafePass.all))),
+      ];
+    }
+    return [
+      Positioned.fill(child: CustomPaint(painter: painter(CafePass.backdrop))),
+      Positioned(
+        left: 0,
+        top: top,
+        width: w,
+        height: roomH,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (room != null) Image.asset(room, fit: BoxFit.fill),
+            for (final path in pictures.values)
+              Image.asset(path, fit: BoxFit.fill),
+          ],
+        ),
+      ),
+      Positioned.fill(child: CustomPaint(painter: painter(CafePass.lighting))),
+    ];
   }
 
   Widget _guest(
@@ -134,7 +179,13 @@ class _CafeSceneState extends State<CafeScene>
                     child: child,
                   ),
                 ),
-                child: CustomPaint(painter: PortraitPainter(look: look)),
+                child: id != null && Art.current.visitor(id) != null
+                    ? Image.asset(
+                        Art.current.visitor(id)!,
+                        fit: BoxFit.contain,
+                        alignment: Alignment.bottomCenter,
+                      )
+                    : CustomPaint(painter: PortraitPainter(look: look)),
               ),
             ),
             Positioned(

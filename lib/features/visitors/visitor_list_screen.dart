@@ -128,7 +128,7 @@ class _VisitorRow extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
-            Portrait(look: def.look, size: 58),
+            Portrait(visitorId: visitorId, look: def.look, size: 58),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

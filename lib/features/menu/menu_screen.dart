@@ -37,7 +37,7 @@ class MenuScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
                 children: [
-                  IconTile(m.icon, size: 50, locked: !owned),
+                  IconTile(m.icon, size: 50, locked: !owned, artId: m.id),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

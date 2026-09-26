@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../core/art/art_library.dart';
 import '../core/brand/handdrawn.dart';
 import '../core/brand/theme.dart';
 import '../core/models/content.dart';
@@ -34,6 +35,7 @@ VisitorLook anonymousLook(int seed) {
 class Portrait extends StatelessWidget {
   const Portrait({
     super.key,
+    this.visitorId,
     required this.look,
     this.size = 56,
     this.locked = false,
@@ -43,9 +45,32 @@ class Portrait extends StatelessWidget {
   final VisitorLook look;
   final double size;
 
+  /// 本番の似顔絵があればそれを使う（assets/art/…/visitors/{id}.png）。
+  final String? visitorId;
+
   /// 未発見の時はシルエットで描く。
   final bool locked;
   final Color background;
+
+  Widget? get _picture {
+    final path = visitorId == null ? null : Art.current.visitor(visitorId!);
+    if (path == null) return null;
+    final image = Image.asset(
+      path,
+      fit: BoxFit.contain,
+      alignment: Alignment.bottomCenter,
+    );
+    // 未発見の人は、絵を影の色で塗りつぶしてシルエットにする
+    return locked
+        ? ColorFiltered(
+            colorFilter: const ColorFilter.mode(
+              Color(0xFFB9A88F),
+              BlendMode.srcIn,
+            ),
+            child: image,
+          )
+        : image;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,9 +84,11 @@ class Portrait extends StatelessWidget {
         shape: portraitBorder(size),
       ),
       clipBehavior: Clip.antiAlias,
-      child: CustomPaint(
-        painter: PortraitPainter(look: look, silhouette: locked),
-      ),
+      child:
+          _picture ??
+          CustomPaint(
+            painter: PortraitPainter(look: look, silhouette: locked),
+          ),
     );
   }
 }

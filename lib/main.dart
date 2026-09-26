@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/art/art_library.dart';
 import 'core/persistence/database.dart';
 import 'core/persistence/save_repository.dart';
 import 'core/services/event_notifier.dart';
@@ -21,6 +22,7 @@ Future<void> main() async {
     yoruKissa.id,
   );
   final initial = await SaveRepository.loadWithMigration(store, legacy);
+  Art.current = await ArtLibrary.load(yoruKissa.id);
   final notifier = createEventNotifier();
   await notifier.init();
   runApp(

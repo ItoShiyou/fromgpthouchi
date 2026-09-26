@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/brand/handdrawn.dart';
@@ -24,12 +25,24 @@ class CafePainter extends CustomPainter {
     required this.placement,
     required this.effects,
     required this.animation,
+    this.pass = CafePass.all,
+    this.artSlots = const {},
+    this.roomArt = false,
   }) : super(repaint: animation);
 
   final WorldMoment moment;
   final Map<PlacementSlot, String> placement;
   final Set<String> effects;
   final Animation<double> animation;
+
+  /// 本番イラストを重ねる時は「背景」と「照明」に分けて描き、間に絵を挟む。
+  final CafePass pass;
+
+  /// 本番イラストがあるスロット（ここはコードでは描かない）。
+  final Set<PlacementSlot> artSlots;
+
+  /// 背景（壁・床・カウンター）の本番イラストがあるか。
+  final bool roomArt;
 
   // 客・カウンターの配置（Widget 側と共有する）。
   static const windowRect = Rect.fromLTRB(0.06, 0.08, 0.46, 0.44);
@@ -46,7 +59,8 @@ class CafePainter extends CustomPainter {
       moment.slot == TimeSlot.lateNight ||
       moment.slot == TimeSlot.closed;
 
-  String? _at(PlacementSlot s) => placement[s];
+  /// コードで描くべき家具（本番イラストがあるスロットは null）。
+  String? _at(PlacementSlot s) => artSlots.contains(s) ? null : placement[s];
 
   /// 縦長の画面では、部屋（4:5）の上に天井、下に床を足して全面に描く。
   static double roomHeight(Size size) =>
@@ -66,10 +80,24 @@ class CafePainter extends CustomPainter {
     );
     final t = animation.value;
 
+    if (pass == CafePass.lighting) {
+      // 絵の上に：猫・コードで描いた家具の輪郭・照明
+      canvas.save();
+      canvas.translate(0, top);
+      _paintCat(canvas, rs, animation.value);
+      _paintLinework(canvas, rs, r);
+      _paintLighting(canvas, rs, top, size.height);
+      canvas.restore();
+      return;
+    }
     _paintExtensions(canvas, size, top, rs.height);
     canvas.save();
     canvas.translate(0, top);
-    _paintRoom(canvas, rs);
+    // 窓の外（空・天気）は常にコードで描く。背景の絵は窓の部分を透明にしておく。
+    if (!roomArt) {
+      _paintRoom(canvas, rs);
+      if (pass == CafePass.backdrop) _paintRoomLines(canvas, rs);
+    }
     _paintWindow(canvas, r(windowRect), t);
     _paintWallItem(canvas, rs, t);
     _paintCorner(canvas, rs);
@@ -77,9 +105,11 @@ class CafePainter extends CustomPainter {
     _paintTable(canvas, rs, t);
     _paintCounter(canvas, r(counterRect), rs);
     _paintLight(canvas, rs);
-    _paintCat(canvas, rs, t);
-    _paintLinework(canvas, rs, r);
-    _paintLighting(canvas, rs, top, size.height);
+    if (pass == CafePass.all) {
+      _paintCat(canvas, rs, t);
+      _paintLinework(canvas, rs, r);
+      _paintLighting(canvas, rs, top, size.height);
+    }
     canvas.restore();
   }
 
@@ -211,15 +241,8 @@ class CafePainter extends CustomPainter {
     Path rect(Rect x, [double radius = 2]) =>
         Rough.rrect(x, radius, amount: 1.0);
 
-    // 壁と床の境目・腰壁
-    line(
-      Rough.line(Offset(0, h * 0.515), Offset(w, h * 0.515), amount: 1.2),
-      opacity: 0.5,
-    );
-    line(
-      Rough.line(Offset(0, h * floorTop), Offset(w, h * floorTop), amount: 1.2),
-      opacity: 0.5,
-    );
+    // 壁と床の境目・腰壁（1 枚で描く時だけ。絵を重ねる時は背景側で先に描く）
+    if (pass == CafePass.all) _paintRoomLines(canvas, s);
 
     // 窓
     final win = r(windowRect);
@@ -308,7 +331,8 @@ class CafePainter extends CustomPainter {
         );
     }
 
-    // カウンターとスツール
+    // カウンターとスツール・床のすじ（背景が絵なら描かない）
+    if (roomArt) return;
     final c = r(counterRect);
     line(rect(c), width: 1.6);
     line(
@@ -342,6 +366,19 @@ class CafePainter extends CustomPainter {
         Rough.line(Offset(x0, y), Offset(x0 + w * 0.12, y + 0.5)),
         width: 0.8,
         opacity: 0.35,
+      );
+    }
+  }
+
+  void _paintRoomLines(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    for (final y in [h * 0.515, h * floorTop]) {
+      Rough.ink(
+        canvas,
+        Rough.line(Offset(0, y), Offset(w, y), amount: 1.2),
+        color: const Color(0xFF3B2C22),
+        width: 1.3,
+        opacity: 0.5,
       );
     }
   }
@@ -1099,6 +1136,11 @@ class CafePainter extends CustomPainter {
   }
 
   void _paintCounter(Canvas canvas, Rect c, Size s) {
+    if (!roomArt) _paintCounterBody(canvas, c, s);
+    _paintCounterDecor(canvas, c, s);
+  }
+
+  void _paintCounterBody(Canvas canvas, Rect c, Size s) {
     canvas.drawRect(c, Paint()..color = const Color(0xFF5A3620));
     canvas.drawRect(
       Rect.fromLTWH(
@@ -1147,6 +1189,9 @@ class CafePainter extends CustomPainter {
         Paint()..color = const Color(0xFF9E2F35),
       );
     }
+  }
+
+  void _paintCounterDecor(Canvas canvas, Rect c, Size s) {
     // カウンターの上の小物
     final id = _at(PlacementSlot.counter);
     final base = Offset(s.width * 0.92, c.top - s.height * 0.02);
@@ -1322,19 +1367,19 @@ class CafePainter extends CustomPainter {
           const Color(0xFFFFD9A0),
         ),
       ],
-      if (_at(PlacementSlot.light) == 'stand_light')
+      if (placement[PlacementSlot.light] == 'stand_light')
         (
           Offset(s.width * 0.07, s.height * 0.44),
           0.45,
           const Color(0xFFFFB866),
         ),
-      if (_at(PlacementSlot.light) == 'night_lamp')
+      if (placement[PlacementSlot.light] == 'night_lamp')
         (Offset(s.width * 0.5, s.height * 0.14), 0.55, const Color(0xFFFFF0C0)),
-      if (_at(PlacementSlot.light) == 'stained_lamp')
+      if (placement[PlacementSlot.light] == 'stained_lamp')
         (Offset(s.width * 0.5, s.height * 0.16), 0.55, const Color(0xFFFF9C7A)),
-      if (_at(PlacementSlot.wall) == 'neon_sign' && _dark)
+      if (placement[PlacementSlot.wall] == 'neon_sign' && _dark)
         (Offset(s.width * 0.74, s.height * 0.22), 0.4, const Color(0xFFFF7FB0)),
-      if (_at(PlacementSlot.corner) == 'jukebox' && _dark)
+      if (placement[PlacementSlot.corner] == 'jukebox' && _dark)
         (
           Offset(s.width * 0.585, s.height * 0.66),
           0.3,
@@ -1359,8 +1404,23 @@ class CafePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CafePainter old) =>
+      old.pass != pass ||
+      old.roomArt != roomArt ||
+      !setEquals(old.artSlots, artSlots) ||
       old.moment.slot != moment.slot ||
       old.moment.weather != moment.weather ||
       old.placement != placement ||
       old.effects != effects;
+}
+
+/// 描き分け（本番イラストを間に挟むため）。
+enum CafePass {
+  /// 全部（イラストが無い時）。
+  all,
+
+  /// 空・背景・家具まで（照明の前）。
+  backdrop,
+
+  /// 時間帯の暗さと灯りだけ。
+  lighting,
 }

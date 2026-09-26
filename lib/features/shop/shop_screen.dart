@@ -76,7 +76,7 @@ class ShopScreen extends ConsumerWidget {
         onButton: () => Navigator.of(ctx).pop(true),
         child: Column(
           children: [
-            IconTile(p.icon, size: 64),
+            IconTile(p.icon, size: 64, artId: p.id),
             const SizedBox(height: 10),
             Text(
               p.name,
@@ -128,7 +128,7 @@ class _ProductCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          IconTile(product.icon, size: 60),
+          IconTile(product.icon, size: 60, artId: product.id),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

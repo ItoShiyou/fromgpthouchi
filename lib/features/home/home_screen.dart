@@ -326,6 +326,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Row(
               children: [
                 Portrait(
+                  visitorId: id,
                   look:
                       def?.look ??
                       anonymousLook(
