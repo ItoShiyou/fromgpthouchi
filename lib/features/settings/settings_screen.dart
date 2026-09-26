@@ -62,8 +62,12 @@ class SettingsScreen extends ConsumerWidget {
                 style: TextStyle(fontSize: 11, color: YohakuColors.inkDim),
               ),
               value: s.settings.notificationsOn,
-              onChanged: (v) =>
-                  ctrl.updateSettings(s.settings.copyWith(notificationsOn: v)),
+              onChanged: (v) {
+                ctrl.updateSettings(s.settings.copyWith(notificationsOn: v));
+                v
+                    ? ctrl.requestNotificationPermission()
+                    : ctrl.cancelNotification();
+              },
             ),
           ]),
           const SectionTitle('データ'),

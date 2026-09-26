@@ -211,6 +211,21 @@ class IdleEngine {
     return IdleResult(next, report);
   }
 
+  /// このまま閉じておいたら、次の出来事はいつ起きるか。
+  ///
+  /// 乱数が時刻で決まるので、店の模様替えなどをしない限り予測は外れない。
+  /// 通知は「出来事が起きた時だけ」送るので、この時刻に 1 件だけ予約する。
+  DiscoveredFragment? predictNextEvent(
+    GameState s,
+    DateTime now, {
+    Duration? horizon,
+  }) {
+    final h = horizon ?? content.maxIdle;
+    final r = run(s.copyWith(lastSimulatedAt: now), now.add(h));
+    final f = r.report.newFragments;
+    return f.isEmpty ? null : f.first;
+  }
+
   /// 席が決まっている客はそのまま、新しい客は空いている席に座らせる。
   static List<SeatedGuest> assignSeats(List<SeatedGuest> guests) {
     final used = <int>{};

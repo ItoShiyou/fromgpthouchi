@@ -64,8 +64,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      ref.read(gameProvider.notifier).catchUp(showReport: true);
+    final ctrl = ref.read(gameProvider.notifier);
+    switch (state) {
+      case AppLifecycleState.resumed:
+        ctrl.cancelNotification();
+        ctrl.catchUp(showReport: true);
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        ctrl.flush();
+        ctrl.planNotification();
+      default:
+        break;
     }
   }
 
@@ -99,6 +108,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
     _dialogOpen = false;
     ref.read(eventQueueProvider.notifier).pop();
+    if (ref.read(eventQueueProvider).isEmpty) {
+      // 出来事を見た直後なら、通知の意味が伝わる。ここで初めて許可を求める
+      // （OS は一度答えた人には二度と聞かないので、何度呼んでもよい）。
+      ref.read(gameProvider.notifier).requestNotificationPermission();
+    }
     _showEvents();
   }
 

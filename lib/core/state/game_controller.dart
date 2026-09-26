@@ -8,6 +8,7 @@ import '../engine/world_engine.dart';
 import '../models/content.dart';
 import '../models/world.dart';
 import '../persistence/save_repository.dart';
+import '../services/event_notifier.dart';
 import 'game_state.dart';
 
 /// 遊ぶタイトル。第 2 作ではここを差し替える。
@@ -16,6 +17,11 @@ final contentProvider = Provider<TitleContent>((ref) => yoruKissa);
 /// main() で SharedPreferences を読み込んでから override する。
 final saveRepositoryProvider = Provider<SaveRepository>(
   (ref) => throw UnimplementedError('override in main()'),
+);
+
+/// 出来事の通知。main() で端末用の実装に差し替える。
+final eventNotifierProvider = Provider<EventNotifier>(
+  (ref) => const NoopEventNotifier(),
 );
 
 /// 起動時に読み込んだセーブ（無ければ null＝はじめから）。main() で override する。
@@ -327,4 +333,40 @@ class GameController extends Notifier<GameState> {
 
   /// 書きかけの保存を終わらせる（アプリが裏に回る時）。
   Future<void> flush() => _repo.flush();
+
+  // ---------------------------------------------------------------------------
+  // 通知（出来事が起きる時だけ、1 件）
+  // ---------------------------------------------------------------------------
+
+  /// アプリが裏に回る時に呼ぶ。次の出来事の時刻に 1 件だけ予約する。
+  Future<void> planNotification() async {
+    final notifier = ref.read(eventNotifierProvider);
+    if (!state.settings.notificationsOn) {
+      await notifier.cancel();
+      return;
+    }
+    final next = _idle.predictNextEvent(state, now());
+    if (next == null) {
+      await notifier.cancel();
+      return;
+    }
+    final started = (state.stories[next.chainId]?.nextStep ?? 0) > 0;
+    // デバッグの時間送りをしている時は、実際の時刻に直して予約する。
+    final at = next.at.subtract(Duration(minutes: state.debugOffsetMinutes));
+    await notifier.scheduleOnly(
+      at,
+      title: _content.placeName,
+      body: started
+          ? '「${_content.story(next.chainId).title}」に、続きがあったようです。'
+          : 'お店で、ちょっとしたことがあったようです。',
+    );
+  }
+
+  Future<void> cancelNotification() => ref.read(eventNotifierProvider).cancel();
+
+  Future<void> requestNotificationPermission() async {
+    if (state.settings.notificationsOn) {
+      await ref.read(eventNotifierProvider).requestPermission();
+    }
+  }
 }

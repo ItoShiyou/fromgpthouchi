@@ -103,6 +103,31 @@ void main() {
       expect(next[2].seat, seated[1].seat);
     });
 
+    test('次の出来事の予測は、実際に閉じておいた時の結果と一致する', () {
+      var s = fresh(t0);
+      var t = t0;
+      var checked = 0;
+      for (var i = 0; i < 20; i++) {
+        final predicted = engine.predictNextEvent(s, t);
+        final actual = engine
+            .run(
+              s.copyWith(lastSimulatedAt: t),
+              t.add(const Duration(hours: 12)),
+            )
+            .report
+            .newFragments;
+        expect(predicted?.at, actual.isEmpty ? null : actual.first.at);
+        expect(
+          predicted?.chainId,
+          actual.isEmpty ? null : actual.first.chainId,
+        );
+        if (predicted != null) checked++;
+        t = t.add(const Duration(hours: 12));
+        s = engine.run(s, t).state;
+      }
+      expect(checked, greaterThan(3));
+    });
+
     test('雨でない時間帯には「雨の日だけ来る人」は来ない', () {
       final m = engine.world.momentAt(DateTime(2026, 9, 26, 22));
       final v = c.visitor('rain_person');
