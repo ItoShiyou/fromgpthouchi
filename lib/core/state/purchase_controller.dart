@@ -92,6 +92,9 @@ class PurchaseController extends Notifier<PurchaseUiState> {
         await _store.finish(e);
         _done(e.productId);
         if (granted) {
+          ref
+              .read(analyticsProvider)
+              .purchased(e.productId, restored: e.restored);
           final name = content.product(e.productId).name;
           _notice(e.restored ? '「$name」を復元しました' : '「$name」を購入しました');
         }

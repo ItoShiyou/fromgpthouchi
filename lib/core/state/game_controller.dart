@@ -8,6 +8,8 @@ import '../engine/world_engine.dart';
 import '../models/content.dart';
 import '../models/world.dart';
 import '../persistence/save_repository.dart';
+import '../persistence/database.dart';
+import '../services/analytics.dart';
 import '../services/event_notifier.dart';
 import '../services/sound.dart';
 import 'game_state.dart';
@@ -24,6 +26,12 @@ final saveRepositoryProvider = Provider<SaveRepository>(
 final eventNotifierProvider = Provider<EventNotifier>(
   (ref) => const NoopEventNotifier(),
 );
+
+/// 試遊ログ。main() で端末内の SQLite に書く実装に差し替える。
+final analyticsProvider = Provider<Analytics>((ref) => Analytics(const []));
+
+/// 試遊ログのまとめを出すための DB（テストでは無し）。
+final databaseProvider = Provider<YohakuDatabase?>((ref) => null);
 
 /// 音。main() で実際に鳴らす実装に差し替える（テストでは無音）。
 final soundProvider = Provider<SoundDirector>(

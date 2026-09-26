@@ -18,7 +18,11 @@ class PaperPage extends StatefulWidget {
     this.footer,
     this.background,
     this.panelColor = YohakuColors.paper,
+    this.onTab,
   });
+
+  /// タブが切り替わった時（試遊ログ用）。
+  final ValueChanged<int>? onTab;
 
   final String title;
   final List<String> tabs;
@@ -111,7 +115,10 @@ class _PaperPageState extends State<PaperPage> {
                             child: PillTabs(
                               labels: widget.tabs,
                               selected: _tab,
-                              onChanged: (i) => setState(() => _tab = i),
+                              onChanged: (i) {
+                                setState(() => _tab = i);
+                                widget.onTab?.call(i);
+                              },
                             ),
                           ),
                         Expanded(child: widget.builder(context, _tab)),

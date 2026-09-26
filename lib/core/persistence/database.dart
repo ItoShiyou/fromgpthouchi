@@ -82,6 +82,14 @@ class Fragments extends Table {
   Set<Column> get primaryKey => {chainId, step};
 }
 
+/// 試遊ログ（SPEC 9 章の指標を見るため）。端末の中にだけ残る。
+class AnalyticsEvents extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get at => dateTime()();
+  TextColumn get name => text()();
+  TextColumn get paramsJson => text()();
+}
+
 @DriftDatabase(
   tables: [
     PlayerState,
@@ -90,6 +98,7 @@ class Fragments extends Table {
     VisitorState,
     EventState,
     Fragments,
+    AnalyticsEvents,
   ],
 )
 class YohakuDatabase extends _$YohakuDatabase {
@@ -107,5 +116,14 @@ class YohakuDatabase extends _$YohakuDatabase {
   );
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      // v1 → v2：試遊ログの表を追加
+      if (from < 2) await m.createTable(analyticsEvents);
+    },
+  );
 }

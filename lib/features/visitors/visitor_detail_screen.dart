@@ -25,6 +25,12 @@ class _VisitorDetailScreenState extends ConsumerState<VisitorDetailScreen> {
   int _tab = 0;
 
   @override
+  void initState() {
+    super.initState();
+    ref.read(analyticsProvider).visitorOpened(widget.visitorId);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = ref.watch(gameProvider);
     final content = ref.watch(contentProvider);

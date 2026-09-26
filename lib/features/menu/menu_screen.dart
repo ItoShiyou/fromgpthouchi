@@ -82,6 +82,9 @@ class MenuScreen extends ConsumerWidget {
                                 ? () {
                                     if (ctrl.unlockMenu(m.id)) {
                                       ref.read(soundProvider).play(Se.stamp);
+                                      ref
+                                          .read(analyticsProvider)
+                                          .menuLearned(m.id);
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                             SnackBar(

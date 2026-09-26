@@ -1025,7 +1025,7 @@ class $InventoryTable extends Inventory
 }
 
 class InventoryData extends DataClass implements Insertable<InventoryData> {
-  /// item / menu / product / episode
+  /// item / menu / product / episode / receipt
   final String kind;
   final String refId;
   const InventoryData({required this.kind, required this.refId});
@@ -2275,6 +2275,301 @@ class FragmentsCompanion extends UpdateCompanion<Fragment> {
   }
 }
 
+class $AnalyticsEventsTable extends AnalyticsEvents
+    with TableInfo<$AnalyticsEventsTable, AnalyticsEvent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AnalyticsEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _atMeta = const VerificationMeta('at');
+  @override
+  late final GeneratedColumn<DateTime> at = GeneratedColumn<DateTime>(
+    'at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _paramsJsonMeta = const VerificationMeta(
+    'paramsJson',
+  );
+  @override
+  late final GeneratedColumn<String> paramsJson = GeneratedColumn<String>(
+    'params_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, at, name, paramsJson];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'analytics_events';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AnalyticsEvent> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('at')) {
+      context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
+    } else if (isInserting) {
+      context.missing(_atMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('params_json')) {
+      context.handle(
+        _paramsJsonMeta,
+        paramsJson.isAcceptableOrUnknown(data['params_json']!, _paramsJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_paramsJsonMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AnalyticsEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AnalyticsEvent(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      at: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}at'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      paramsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}params_json'],
+      )!,
+    );
+  }
+
+  @override
+  $AnalyticsEventsTable createAlias(String alias) {
+    return $AnalyticsEventsTable(attachedDatabase, alias);
+  }
+}
+
+class AnalyticsEvent extends DataClass implements Insertable<AnalyticsEvent> {
+  final int id;
+  final DateTime at;
+  final String name;
+  final String paramsJson;
+  const AnalyticsEvent({
+    required this.id,
+    required this.at,
+    required this.name,
+    required this.paramsJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['at'] = Variable<DateTime>(at);
+    map['name'] = Variable<String>(name);
+    map['params_json'] = Variable<String>(paramsJson);
+    return map;
+  }
+
+  AnalyticsEventsCompanion toCompanion(bool nullToAbsent) {
+    return AnalyticsEventsCompanion(
+      id: Value(id),
+      at: Value(at),
+      name: Value(name),
+      paramsJson: Value(paramsJson),
+    );
+  }
+
+  factory AnalyticsEvent.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AnalyticsEvent(
+      id: serializer.fromJson<int>(json['id']),
+      at: serializer.fromJson<DateTime>(json['at']),
+      name: serializer.fromJson<String>(json['name']),
+      paramsJson: serializer.fromJson<String>(json['paramsJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'at': serializer.toJson<DateTime>(at),
+      'name': serializer.toJson<String>(name),
+      'paramsJson': serializer.toJson<String>(paramsJson),
+    };
+  }
+
+  AnalyticsEvent copyWith({
+    int? id,
+    DateTime? at,
+    String? name,
+    String? paramsJson,
+  }) => AnalyticsEvent(
+    id: id ?? this.id,
+    at: at ?? this.at,
+    name: name ?? this.name,
+    paramsJson: paramsJson ?? this.paramsJson,
+  );
+  AnalyticsEvent copyWithCompanion(AnalyticsEventsCompanion data) {
+    return AnalyticsEvent(
+      id: data.id.present ? data.id.value : this.id,
+      at: data.at.present ? data.at.value : this.at,
+      name: data.name.present ? data.name.value : this.name,
+      paramsJson: data.paramsJson.present
+          ? data.paramsJson.value
+          : this.paramsJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnalyticsEvent(')
+          ..write('id: $id, ')
+          ..write('at: $at, ')
+          ..write('name: $name, ')
+          ..write('paramsJson: $paramsJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, at, name, paramsJson);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AnalyticsEvent &&
+          other.id == this.id &&
+          other.at == this.at &&
+          other.name == this.name &&
+          other.paramsJson == this.paramsJson);
+}
+
+class AnalyticsEventsCompanion extends UpdateCompanion<AnalyticsEvent> {
+  final Value<int> id;
+  final Value<DateTime> at;
+  final Value<String> name;
+  final Value<String> paramsJson;
+  const AnalyticsEventsCompanion({
+    this.id = const Value.absent(),
+    this.at = const Value.absent(),
+    this.name = const Value.absent(),
+    this.paramsJson = const Value.absent(),
+  });
+  AnalyticsEventsCompanion.insert({
+    this.id = const Value.absent(),
+    required DateTime at,
+    required String name,
+    required String paramsJson,
+  }) : at = Value(at),
+       name = Value(name),
+       paramsJson = Value(paramsJson);
+  static Insertable<AnalyticsEvent> custom({
+    Expression<int>? id,
+    Expression<DateTime>? at,
+    Expression<String>? name,
+    Expression<String>? paramsJson,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (at != null) 'at': at,
+      if (name != null) 'name': name,
+      if (paramsJson != null) 'params_json': paramsJson,
+    });
+  }
+
+  AnalyticsEventsCompanion copyWith({
+    Value<int>? id,
+    Value<DateTime>? at,
+    Value<String>? name,
+    Value<String>? paramsJson,
+  }) {
+    return AnalyticsEventsCompanion(
+      id: id ?? this.id,
+      at: at ?? this.at,
+      name: name ?? this.name,
+      paramsJson: paramsJson ?? this.paramsJson,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (at.present) {
+      map['at'] = Variable<DateTime>(at.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (paramsJson.present) {
+      map['params_json'] = Variable<String>(paramsJson.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnalyticsEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('at: $at, ')
+          ..write('name: $name, ')
+          ..write('paramsJson: $paramsJson')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$YohakuDatabase extends GeneratedDatabase {
   _$YohakuDatabase(QueryExecutor e) : super(e);
   $YohakuDatabaseManager get managers => $YohakuDatabaseManager(this);
@@ -2284,6 +2579,9 @@ abstract class _$YohakuDatabase extends GeneratedDatabase {
   late final $VisitorStateTable visitorState = $VisitorStateTable(this);
   late final $EventStateTable eventState = $EventStateTable(this);
   late final $FragmentsTable fragments = $FragmentsTable(this);
+  late final $AnalyticsEventsTable analyticsEvents = $AnalyticsEventsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2295,6 +2593,7 @@ abstract class _$YohakuDatabase extends GeneratedDatabase {
     visitorState,
     eventState,
     fragments,
+    analyticsEvents,
   ];
 }
 
@@ -3578,6 +3877,198 @@ typedef $$FragmentsTableProcessedTableManager =
       Fragment,
       PrefetchHooks Function()
     >;
+typedef $$AnalyticsEventsTableCreateCompanionBuilder =
+    AnalyticsEventsCompanion Function({
+      Value<int> id,
+      required DateTime at,
+      required String name,
+      required String paramsJson,
+    });
+typedef $$AnalyticsEventsTableUpdateCompanionBuilder =
+    AnalyticsEventsCompanion Function({
+      Value<int> id,
+      Value<DateTime> at,
+      Value<String> name,
+      Value<String> paramsJson,
+    });
+
+class $$AnalyticsEventsTableFilterComposer
+    extends Composer<_$YohakuDatabase, $AnalyticsEventsTable> {
+  $$AnalyticsEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paramsJson => $composableBuilder(
+    column: $table.paramsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AnalyticsEventsTableOrderingComposer
+    extends Composer<_$YohakuDatabase, $AnalyticsEventsTable> {
+  $$AnalyticsEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paramsJson => $composableBuilder(
+    column: $table.paramsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AnalyticsEventsTableAnnotationComposer
+    extends Composer<_$YohakuDatabase, $AnalyticsEventsTable> {
+  $$AnalyticsEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get paramsJson => $composableBuilder(
+    column: $table.paramsJson,
+    builder: (column) => column,
+  );
+}
+
+class $$AnalyticsEventsTableTableManager
+    extends
+        RootTableManager<
+          _$YohakuDatabase,
+          $AnalyticsEventsTable,
+          AnalyticsEvent,
+          $$AnalyticsEventsTableFilterComposer,
+          $$AnalyticsEventsTableOrderingComposer,
+          $$AnalyticsEventsTableAnnotationComposer,
+          $$AnalyticsEventsTableCreateCompanionBuilder,
+          $$AnalyticsEventsTableUpdateCompanionBuilder,
+          (
+            AnalyticsEvent,
+            BaseReferences<
+              _$YohakuDatabase,
+              $AnalyticsEventsTable,
+              AnalyticsEvent
+            >,
+          ),
+          AnalyticsEvent,
+          PrefetchHooks Function()
+        > {
+  $$AnalyticsEventsTableTableManager(
+    _$YohakuDatabase db,
+    $AnalyticsEventsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AnalyticsEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AnalyticsEventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AnalyticsEventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<DateTime> at = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> paramsJson = const Value.absent(),
+              }) => AnalyticsEventsCompanion(
+                id: id,
+                at: at,
+                name: name,
+                paramsJson: paramsJson,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required DateTime at,
+                required String name,
+                required String paramsJson,
+              }) => AnalyticsEventsCompanion.insert(
+                id: id,
+                at: at,
+                name: name,
+                paramsJson: paramsJson,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AnalyticsEventsTable, AnalyticsEvent>(table),
+                  BaseReferences<
+                    _$YohakuDatabase,
+                    $AnalyticsEventsTable,
+                    AnalyticsEvent
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AnalyticsEventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$YohakuDatabase,
+      $AnalyticsEventsTable,
+      AnalyticsEvent,
+      $$AnalyticsEventsTableFilterComposer,
+      $$AnalyticsEventsTableOrderingComposer,
+      $$AnalyticsEventsTableAnnotationComposer,
+      $$AnalyticsEventsTableCreateCompanionBuilder,
+      $$AnalyticsEventsTableUpdateCompanionBuilder,
+      (
+        AnalyticsEvent,
+        BaseReferences<_$YohakuDatabase, $AnalyticsEventsTable, AnalyticsEvent>,
+      ),
+      AnalyticsEvent,
+      PrefetchHooks Function()
+    >;
 
 class $YohakuDatabaseManager {
   final _$YohakuDatabase _db;
@@ -3594,4 +4085,6 @@ class $YohakuDatabaseManager {
       $$EventStateTableTableManager(_db, _db.eventState);
   $$FragmentsTableTableManager get fragments =>
       $$FragmentsTableTableManager(_db, _db.fragments);
+  $$AnalyticsEventsTableTableManager get analyticsEvents =>
+      $$AnalyticsEventsTableTableManager(_db, _db.analyticsEvents);
 }

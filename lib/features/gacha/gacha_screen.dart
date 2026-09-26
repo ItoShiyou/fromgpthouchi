@@ -237,6 +237,9 @@ class _GachaScreenState extends ConsumerState<GachaScreen>
     final out = ref.read(gameProvider.notifier).drawGacha(times);
     if (out == null) return;
     ref.read(soundProvider).play(Se.gacha);
+    ref
+        .read(analyticsProvider)
+        .gachaDrawn(times, out.draws.where((d) => d.isNew).length);
     await _shake.forward(from: 0);
     if (!mounted) return;
     final c = ref.read(contentProvider);

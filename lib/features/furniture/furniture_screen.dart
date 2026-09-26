@@ -213,6 +213,9 @@ class _Footer extends ConsumerWidget {
             ? () {
                 if (ctrl.buyItem(item.id)) {
                   ctrl.place(item.id);
+                  ref.read(analyticsProvider).furnitureBought(item.id, [
+                    for (final a in ref.read(ambiencesProvider)) a.id,
+                  ]);
                   ref.read(soundProvider).play(Se.stamp);
                 }
               }

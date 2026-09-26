@@ -36,6 +36,7 @@ class ZukanScreen extends ConsumerWidget {
 
     return PaperPage(
       title: '図鑑',
+      onTab: (i) => ref.read(analyticsProvider).zukanTab(i),
       tabs: const ['お客様', '家具', 'メニュー', '出来事'],
       builder: (context, tab) {
         final (found, total) = switch (tab) {

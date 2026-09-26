@@ -51,6 +51,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // ストアが起動時に届け直す購入（中断された支払いなど）を受け取れるようにする
       ref.read(purchaseProvider);
       _applySound();
+      _startSession();
       final pending = ref.read(gameProvider).pendingReport;
       ref.read(gameProvider.notifier).catchUp(showReport: true);
       // 前回開いたまま閉じた「おかえりなさい」は、精算しても listen が発火しない。
@@ -73,11 +74,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final ctrl = ref.read(gameProvider.notifier);
     switch (state) {
       case AppLifecycleState.resumed:
+        _startSession();
         ref.read(soundProvider).resume();
         ctrl.cancelNotification();
         ctrl.catchUp(showReport: true);
       case AppLifecycleState.paused:
       case AppLifecycleState.hidden:
+        _endSession();
         ref.read(soundProvider).pause();
         ctrl.flush();
         ctrl.planNotification();
@@ -86,11 +89,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
+  // 1 回の滞在（開いてから裏に回るまで）。hidden と paused が続けて来るので二重に数えない。
+  DateTime? _sessionStartedAt;
+
+  void _startSession() {
+    if (_sessionStartedAt != null) return;
+    _sessionStartedAt = DateTime.now();
+    final last = ref.read(gameProvider).lastSimulatedAt;
+    final now = ref.read(gameProvider.notifier).now();
+    ref.read(analyticsProvider).sessionStart(sinceLast: now.difference(last));
+  }
+
+  void _endSession() {
+    final started = _sessionStartedAt;
+    if (started == null) return;
+    _sessionStartedAt = null;
+    ref.read(analyticsProvider).sessionEnd(DateTime.now().difference(started));
+  }
+
   Future<void> _showReport() async {
     if (_dialogOpen) return;
     final report = ref.read(gameProvider).pendingReport;
     if (report == null) return;
     _dialogOpen = true;
+    ref
+        .read(analyticsProvider)
+        .reportShown(
+          minutes: report.elapsed.inMinutes,
+          income: report.income,
+          visits: report.visitCount,
+          events: report.newFragments.length,
+        );
     Navigator.of(context).popUntil((r) => r.isFirst);
     await showDialog<void>(
       context: context,
@@ -109,6 +138,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final queue = ref.read(eventQueueProvider);
     if (queue.isEmpty) return;
     _dialogOpen = true;
+    ref
+        .read(analyticsProvider)
+        .eventSeen(queue.first.chainId, queue.first.step);
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black45,

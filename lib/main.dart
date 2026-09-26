@@ -6,6 +6,7 @@ import 'app.dart';
 import 'core/art/art_library.dart';
 import 'core/persistence/database.dart';
 import 'core/persistence/save_repository.dart';
+import 'core/services/analytics.dart';
 import 'core/services/event_notifier.dart';
 import 'core/services/purchase_store.dart';
 import 'core/services/sound.dart';
@@ -31,6 +32,10 @@ Future<void> main() async {
         saveRepositoryProvider.overrideWithValue(SaveRepository(store)),
         initialGameStateProvider.overrideWithValue(initial),
         eventNotifierProvider.overrideWithValue(notifier),
+        databaseProvider.overrideWithValue(db),
+        analyticsProvider.overrideWithValue(
+          Analytics([DriftAnalyticsSink(db)]),
+        ),
         soundProvider.overrideWithValue(SoundDirector(AudioplayersOutput())),
         purchaseStoreProvider.overrideWithValue(
           createPurchaseStore(yoruKissa.products),

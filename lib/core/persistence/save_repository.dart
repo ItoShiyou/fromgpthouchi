@@ -177,7 +177,9 @@ class DriftSaveStore implements SaveStore {
 
   @override
   Future<void> clear() => db.transaction(() async {
+    // 試遊ログはセーブデータではないので残す
     for (final t in db.allTables) {
+      if (t is $AnalyticsEventsTable) continue;
       await db.delete(t).go();
     }
   });

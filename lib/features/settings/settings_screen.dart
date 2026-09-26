@@ -6,7 +6,9 @@ import '../../core/brand/handdrawn.dart';
 
 import '../../core/brand/theme.dart';
 import '../../core/models/world.dart';
+import '../../core/persistence/database.dart';
 import '../../core/services/ads.dart';
+import '../../core/services/analytics.dart';
 import '../../core/state/game_controller.dart';
 import '../../widgets/common.dart';
 import '../series/series_screen.dart';
@@ -109,6 +111,10 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ]),
+          if (ref.read(databaseProvider) case final db?) ...[
+            const SectionTitle('試遊ログ'),
+            group([_PlaytestPanel(db: db)]),
+          ],
           const SectionTitle('試遊用（デバッグ）'),
           group([
             Padding(
@@ -228,6 +234,93 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 試遊で見たいこと（SPEC 9 章）のまとめ。端末の中にだけ残る。
+class _PlaytestPanel extends StatefulWidget {
+  const _PlaytestPanel({required this.db});
+
+  final YohakuDatabase db;
+
+  @override
+  State<_PlaytestPanel> createState() => _PlaytestPanelState();
+}
+
+class _PlaytestPanelState extends State<_PlaytestPanel> {
+  late final Future<PlaytestSummary> _summary = PlaytestSummary.of(widget.db);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(14),
+      child: FutureBuilder<PlaytestSummary>(
+        future: _summary,
+        builder: (context, snap) {
+          final p = snap.data;
+          if (p == null) return const SizedBox(height: 40);
+          Widget row(String label, String value) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3),
+            child: Row(
+              children: [
+                Text(label, style: const TextStyle(fontSize: 12)),
+                const SizedBox(width: 8),
+                const Expanded(child: BlankRule(height: 12)),
+                const SizedBox(width: 8),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          );
+          final median = p.medianSessionSeconds;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              row(
+                'はじめた日',
+                p.firstDay == null
+                    ? '—'
+                    : '${p.firstDay!.month}/${p.firstDay!.day}',
+              ),
+              row(
+                '翌日も開いた',
+                p.firstDay == null ? '—' : (p.returnedNextDay ? 'はい' : 'まだ'),
+              ),
+              row('開いた日数', '${p.daysPlayed} 日'),
+              row('開いた回数', '${p.sessions} 回'),
+              row(
+                '1 回の長さ（中央値）',
+                median == null ? '—' : '${median ~/ 60} 分 ${median % 60} 秒',
+              ),
+              row('見た出来事', '${p.eventsSeen} 件'),
+              row('客のことを見た', '${p.visitorOpens} 回'),
+              row('図鑑のタブを開いた', '${p.zukanOpens} 回'),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () async {
+                    final json = await PlaytestSummary.export(widget.db);
+                    await Clipboard.setData(ClipboardData(text: json));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('試遊ログをコピーしました')),
+                      );
+                    }
+                  },
+                  child: const Text('試遊ログを書き出す'),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
