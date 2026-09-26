@@ -37,7 +37,7 @@ class PlayerState extends Table {
 }
 
 class Inventory extends Table {
-  /// item / menu / product / episode
+  /// item / menu / product / episode / receipt
   TextColumn get kind => text()();
   TextColumn get refId => text()();
 

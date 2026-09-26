@@ -45,6 +45,7 @@ void main() {
       purchasedProducts: {'ad_free'},
       episodes: {'rain_three'},
       adFree: true,
+      grantedReceipts: {'GPA.1234', 'mock-1'},
     );
   }
 

@@ -282,11 +282,17 @@ class GameController extends Notifier<GameState> {
     return out;
   }
 
-  /// 実装時は in_app_purchase の購入完了コールバックからここを呼ぶ。
-  void completePurchase(String productId) {
+  /// 購入を付与する。[transactionId] が付与済みなら何もしない（false）。
+  /// ストアの購入イベントは PurchaseController から届く。
+  bool completePurchase(String productId, {String? transactionId}) {
+    if (transactionId != null &&
+        state.grantedReceipts.contains(transactionId)) {
+      return false;
+    }
     final p = _content.product(productId);
     var s = state.copyWith(
       purchasedProducts: {...state.purchasedProducts, productId},
+      grantedReceipts: {...state.grantedReceipts, ?transactionId},
     );
     switch (p.type) {
       case ProductType.adFree:
@@ -299,6 +305,7 @@ class GameController extends Notifier<GameState> {
         s = s.copyWith(tickets: s.tickets + p.tickets);
     }
     _set(s);
+    return true;
   }
 
   // ---------------------------------------------------------------------------

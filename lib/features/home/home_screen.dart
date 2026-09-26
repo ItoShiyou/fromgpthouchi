@@ -7,6 +7,7 @@ import '../../core/brand/handdrawn.dart';
 
 import '../../core/brand/theme.dart';
 import '../../core/state/game_controller.dart';
+import '../../core/state/purchase_controller.dart';
 import '../../titles/yoru_kissa/cafe_scene.dart';
 import '../../widgets/common.dart';
 import '../../widgets/portrait.dart';
@@ -45,6 +46,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // ストアが起動時に届け直す購入（中断された支払いなど）を受け取れるようにする
+      ref.read(purchaseProvider);
       final pending = ref.read(gameProvider).pendingReport;
       ref.read(gameProvider.notifier).catchUp(showReport: true);
       // 前回開いたまま閉じた「おかえりなさい」は、精算しても listen が発火しない。

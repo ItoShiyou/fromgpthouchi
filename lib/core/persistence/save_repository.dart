@@ -48,6 +48,7 @@ class DriftSaveStore implements SaveStore {
       ownedMenus: ids('menu'),
       purchasedProducts: ids('product'),
       episodes: ids('episode'),
+      grantedReceipts: ids('receipt'),
       placement: {
         for (final r in placement)
           if (PlacementSlot.values.any((s) => s.name == r.slot))
@@ -142,6 +143,8 @@ class DriftSaveStore implements SaveStore {
           InventoryCompanion.insert(kind: 'product', refId: id),
         for (final id in s.episodes)
           InventoryCompanion.insert(kind: 'episode', refId: id),
+        for (final id in s.grantedReceipts)
+          InventoryCompanion.insert(kind: 'receipt', refId: id),
       ]);
       b.insertAll(db.placement, [
         for (final e in s.placement.entries)

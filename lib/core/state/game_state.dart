@@ -256,6 +256,7 @@ class GameState {
     required this.debugOffsetMinutes,
     required this.settings,
     this.pendingReport,
+    this.grantedReceipts = const {},
   });
 
   /// 使える売上。
@@ -290,6 +291,9 @@ class GameState {
   final int debugOffsetMinutes;
   final GameSettings settings;
   final IdleReport? pendingReport;
+
+  /// 付与済みの購入（ストアの取引 ID）。同じ購入が二度届いても二重に渡さない。
+  final Set<String> grantedReceipts;
 
   factory GameState.initial(TitleContent c, DateTime now) => GameState(
     money: c.initialMoney,
@@ -351,6 +355,7 @@ class GameState {
     int? debugOffsetMinutes,
     GameSettings? settings,
     Object? pendingReport = _unset,
+    Set<String>? grantedReceipts,
   }) => GameState(
     money: money ?? this.money,
     register: register ?? this.register,
@@ -379,6 +384,7 @@ class GameState {
     pendingReport: identical(pendingReport, _unset)
         ? this.pendingReport
         : pendingReport as IdleReport?,
+    grantedReceipts: grantedReceipts ?? this.grantedReceipts,
   );
 
   Map<String, dynamic> toJson() => {
@@ -406,6 +412,7 @@ class GameState {
     'debugOffsetMinutes': debugOffsetMinutes,
     'settings': settings.toJson(),
     'pendingReport': pendingReport?.toJson(),
+    'grantedReceipts': grantedReceipts.toList(),
   };
 
   factory GameState.fromJson(Map<String, dynamic> j) => GameState(
@@ -451,5 +458,8 @@ class GameState {
     pendingReport: j['pendingReport'] == null
         ? null
         : IdleReport.fromJson(j['pendingReport'] as Map<String, dynamic>),
+    grantedReceipts: ((j['grantedReceipts'] as List?) ?? const [])
+        .cast<String>()
+        .toSet(),
   );
 }
