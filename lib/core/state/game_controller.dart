@@ -10,6 +10,7 @@ import '../models/world.dart';
 import '../persistence/save_repository.dart';
 import '../persistence/database.dart';
 import '../services/analytics.dart';
+import '../services/cloud_backup.dart';
 import '../services/event_notifier.dart';
 import '../services/sound.dart';
 import 'game_state.dart';
@@ -25,6 +26,11 @@ final saveRepositoryProvider = Provider<SaveRepository>(
 /// 出来事の通知。main() で端末用の実装に差し替える。
 final eventNotifierProvider = Provider<EventNotifier>(
   (ref) => const NoopEventNotifier(),
+);
+
+/// クラウドのバックアップ。main() で、設定があれば Supabase に差し替える。
+final cloudBackupProvider = Provider<CloudBackup>(
+  (ref) => const DisabledCloudBackup(),
 );
 
 /// 試遊ログ。main() で端末内の SQLite に書く実装に差し替える。
@@ -358,6 +364,12 @@ class GameController extends Notifier<GameState> {
   }
 
   String exportSave() => _repo.export(state);
+
+  /// クラウドから戻した（または引き継いだ）セーブに置き換える。
+  /// 預けた時からの時間は、次の精算でいつも通り（最大 12 時間分）数える。
+  void restoreFrom(GameState saved) {
+    _set(saved.copyWith(pendingReport: null, debugOffsetMinutes: 0));
+  }
 
   /// 書きかけの保存を終わらせる（アプリが裏に回る時）。
   Future<void> flush() => _repo.flush();

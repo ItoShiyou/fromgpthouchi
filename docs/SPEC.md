@@ -216,24 +216,25 @@ weight = baseWeight
 - 「とくべつ」枠の月夜の窓は、セット販売で確実に買える
 - 無料でもチケットは 1 日 1 枚＋客が置いていく分が手に入る
 
-## 8. セーブデータ
+## 8. セーブデータとサーバー
 
-モックは `shared_preferences` に JSON 1 本（`GameState`）。
-本実装では以下に分割して Drift(SQLite) に置き、Supabase の `cloud_save` にバックアップする。
+正本は端末の SQLite（Drift、`lib/core/persistence/database.dart`）。v0.1〜0.3 の JSON セーブは初回起動時に自動で取り込む。
+保存は 20 秒ごとの精算でも重ならないよう、最新の状態だけを 1 本ずつ書く。
 
 | ローカル（Drift） | 中身 |
 | --- | --- |
-| player_state | 売上・レジ・チケット・天井カウンタ・広告削除・最終精算時刻 |
-| inventory | 所持アイテム・メニュー・購入済み商品・エピソード |
-| furniture | スロットごとの配置、BGM・演出 |
+| player_state | 売上・レジ・チケット・天井カウンタ・広告削除・最終精算時刻・席の客など |
+| inventory | 所持アイテム・メニュー・購入済み商品・エピソード・付与済みの取引 ID |
+| placement | スロットごとの配置 |
 | visitor_state | 客ごとの来店回数・初来店・最終来店・好物判明 |
-| event_state | 物語ごとの進行・発見した段階と日時 |
+| event_state / fragments | 物語ごとの進行・発見した段階と日時 |
+| analytics_events | 試遊ログ（セーブを消しても残る） |
 
-| サーバー（Supabase） | 用途 |
+| サーバー（Supabase、`supabase/`） | 用途 |
 | --- | --- |
-| users / cloud_save | 機種変更・バックアップ |
-| purchase_records | レシート検証・復元 |
-| event_master / item_master / gacha_master | 配信で追加するコンテンツ |
+| cloud_save / transfer_codes | バックアップ・機種変更（引き継ぎコード、一度きり・24 時間） |
+| purchase_records | レシート検証の記録（書くのは Edge Function だけ） |
+| event_master / item_master / gacha_master | あとから配るコンテンツ |
 
 乱数は 32bit 演算を JS でも同じ結果になるよう実装してあり、
 **端末と Web で同じ時刻なら同じ客・同じ天気になる**（`test/seeded_random_test.dart`）。
@@ -248,7 +249,8 @@ weight = baseWeight
 | 出来事の続きが気になるか | 図鑑「出来事」タブを開いた回数、ヒント後の模様替え |
 | 家具を買う理由が「雰囲気」になっているか | 模様替え画面の滞在・購入順 |
 
-本実装では Firebase Analytics でこれらのイベントを送る。
+これらは端末内の試遊ログ（`analytics_events`）に記録され、設定画面の「試遊ログ」でまとめを見て、JSON で書き出せる。
+Firebase Analytics を使う時は、`AnalyticsSink` を実装して `Analytics` に足すだけ（設定ファイルが必要なので未導入）。
 
 ## 10. 次にやること（企画書 24 の開発順に対応）
 
@@ -259,11 +261,16 @@ weight = baseWeight
 - [x] Phase 5　家具配置
 - [x] Phase 6　イベントシステム
 - [x] Phase 7　ガチャ（ロジックと画面のみ）
-- [ ] Phase 8　IAP 接続（`in_app_purchase`、レシート検証は Supabase Edge Functions）
-- [ ] Phase 9　広告接続（`google_mobile_ads`、広告削除でオフ）
-- [ ] Phase 10　アート・音・演出（店・外観・くじ機・似顔絵の CustomPainter と絵文字アイコンを、参考ビジュアルのタッチのイラストに差し替え、BGM 5 曲）
-- [ ] 保存を Drift へ移行、Crashlytics / Analytics 導入
-- [ ] 通知（出来事が起きた時だけ。ログイン催促はしない）
+- [x] Phase 8　IAP 接続（`in_app_purchase`。取引ごとに一度だけ付与、購入の復元、ストアの価格表示）
+  - [ ] レシート検証のストア照会（`supabase/functions/verify-receipt` の `verifyWithStore`）
+- [x] Phase 9　広告接続（`google_mobile_ads`。お店の下のバナー 1 枚、同意フォーム、広告削除でオフ）
+- [x] Phase 10　差し替えの仕組み（`docs/ART_GUIDE.md`）と仮の音（BGM 3・効果音 4）
+  - [ ] 本番イラスト・本番の音を入れる（置くだけで差し替わる）
+- [x] 保存を Drift へ移行（旧セーブの取り込み付き）
+- [x] 通知（出来事が起きる時刻を予測して 1 件だけ。ログイン催促はしない）
+- [x] 試遊ログ（端末内）／クラウドのバックアップと機種変更（Supabase）
+  - [ ] Firebase Analytics / Crashlytics（プロジェクトの設定ファイルが要る）
+- [ ] 実機でのビルド・動作確認（`docs/STORE_SETUP.md` の最後）
 - [ ] 試遊で手応えがあれば、客 20 / 家具 40 / メニュー 15 / 出来事 30 へ拡張
 
 ## 11. 試遊のしかた

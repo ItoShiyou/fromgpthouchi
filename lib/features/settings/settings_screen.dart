@@ -9,6 +9,7 @@ import '../../core/models/world.dart';
 import '../../core/persistence/database.dart';
 import '../../core/services/ads.dart';
 import '../../core/services/analytics.dart';
+import '../../core/services/cloud_backup.dart';
 import '../../core/state/game_controller.dart';
 import '../../widgets/common.dart';
 import '../series/series_screen.dart';
@@ -73,6 +74,10 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
           ]),
+          if (ref.read(cloudBackupProvider).enabled) ...[
+            const SectionTitle('クラウド・機種変更'),
+            group([const _CloudPanel()]),
+          ],
           const SectionTitle('データ'),
           group([
             ListTile(
@@ -322,6 +327,180 @@ class _PlaytestPanelState extends State<_PlaytestPanel> {
           );
         },
       ),
+    );
+  }
+}
+
+/// クラウドに預ける／戻す、引き継ぎコード。自動では上書きしない。
+class _CloudPanel extends ConsumerStatefulWidget {
+  const _CloudPanel();
+
+  @override
+  ConsumerState<_CloudPanel> createState() => _CloudPanelState();
+}
+
+class _CloudPanelState extends ConsumerState<_CloudPanel> {
+  bool _busy = false;
+  DateTime? _last;
+
+  CloudBackup get _cloud => ref.read(cloudBackupProvider);
+  String get _title => ref.read(contentProvider).id;
+
+  @override
+  void initState() {
+    super.initState();
+    _cloud
+        .lastBackupAt(_title)
+        .then((t) {
+          if (mounted) setState(() => _last = t);
+        })
+        .catchError((Object _) {});
+  }
+
+  Future<void> _run(Future<void> Function() f) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await f();
+    } catch (_) {
+      _say('うまくいきませんでした。通信できる所でもう一度試してください');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _say(String m) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+  }
+
+  Future<bool> _confirm(String text) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (ctx) => PaperDialog(
+          buttonLabel: '置き換える',
+          onButton: () => Navigator.of(ctx).pop(true),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(height: 1.8),
+          ),
+        ),
+      ) ==
+      true;
+
+  Future<void> _upload() => _run(() async {
+    await ref.read(gameProvider.notifier).flush();
+    await _cloud.upload(_title, ref.read(gameProvider));
+    setState(() => _last = DateTime.now());
+    _say('クラウドに預けました');
+  });
+
+  Future<void> _download() => _run(() async {
+    final saved = await _cloud.download(_title);
+    if (saved == null) {
+      _say('クラウドに預けたデータがありません');
+      return;
+    }
+    if (!await _confirm('クラウドに預けた時の状態に戻します。\nいまの店の様子は消えます。')) return;
+    ref.read(gameProvider.notifier).restoreFrom(saved);
+    _say('クラウドから戻しました');
+  });
+
+  Future<void> _issueCode() => _run(() async {
+    await _cloud.upload(_title, ref.read(gameProvider));
+    final code = await _cloud.createTransferCode(_title);
+    final shown = [
+      for (var i = 0; i < code.length; i += 4)
+        code.substring(i, (i + 4).clamp(0, code.length)),
+    ].join('-');
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => PaperDialog(
+        buttonLabel: 'コピーして閉じる',
+        onButton: () {
+          Clipboard.setData(ClipboardData(text: shown));
+          Navigator.of(ctx).pop();
+        },
+        child: Column(
+          children: [
+            const Text('新しい端末で、このコードを入れてください。', style: TextStyle(height: 1.8)),
+            const SizedBox(height: 12),
+            SelectableText(shown, style: YohakuText.heading(22)),
+            const SizedBox(height: 8),
+            const Text(
+              '24 時間・一度だけ使えます',
+              style: TextStyle(fontSize: 11, color: YohakuColors.inkDim),
+            ),
+          ],
+        ),
+      ),
+    );
+  });
+
+  Future<void> _enterCode() async {
+    final field = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      builder: (ctx) => PaperDialog(
+        buttonLabel: '引き継ぐ',
+        onButton: () => Navigator.of(ctx).pop(field.text.trim()),
+        child: Column(
+          children: [
+            const Text('前の端末で出した引き継ぎコード', style: TextStyle(height: 1.8)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: field,
+              textAlign: TextAlign.center,
+              textCapitalization: TextCapitalization.characters,
+              decoration: const InputDecoration(hintText: 'XXXX-XXXX-XXXX'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (code == null || code.isEmpty) return;
+    if (!await _confirm('前の端末の店を、この端末に引き継ぎます。\nいまの店の様子は消えます。')) return;
+    await _run(() async {
+      final saved = await _cloud.claimTransferCode(code);
+      ref.read(gameProvider.notifier).restoreFrom(saved);
+      _say('引き継ぎました');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final last = _last;
+    return Column(
+      children: [
+        ListTile(
+          enabled: !_busy,
+          title: const Text('クラウドに預ける'),
+          subtitle: Text(
+            last == null
+                ? 'まだ預けていません'
+                : '前回：${last.month}/${last.day} ${last.hour}:${last.minute.toString().padLeft(2, '0')}',
+            style: const TextStyle(fontSize: 11, color: YohakuColors.inkDim),
+          ),
+          onTap: _upload,
+        ),
+        ListTile(
+          enabled: !_busy,
+          title: const Text('クラウドから戻す'),
+          onTap: _download,
+        ),
+        ListTile(
+          enabled: !_busy,
+          title: const Text('引き継ぎコードを出す（前の端末で）'),
+          onTap: _issueCode,
+        ),
+        ListTile(
+          enabled: !_busy,
+          title: const Text('引き継ぎコードを入れる（新しい端末で）'),
+          onTap: _enterCode,
+        ),
+      ],
     );
   }
 }

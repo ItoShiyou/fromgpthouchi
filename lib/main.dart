@@ -7,6 +7,7 @@ import 'core/art/art_library.dart';
 import 'core/persistence/database.dart';
 import 'core/persistence/save_repository.dart';
 import 'core/services/analytics.dart';
+import 'core/services/cloud_backup.dart';
 import 'core/services/event_notifier.dart';
 import 'core/services/purchase_store.dart';
 import 'core/services/sound.dart';
@@ -24,6 +25,7 @@ Future<void> main() async {
   );
   final initial = await SaveRepository.loadWithMigration(store, legacy);
   Art.current = await ArtLibrary.load(yoruKissa.id);
+  final cloud = await createCloudBackup();
   final notifier = createEventNotifier();
   await notifier.init();
   runApp(
@@ -33,6 +35,12 @@ Future<void> main() async {
         initialGameStateProvider.overrideWithValue(initial),
         eventNotifierProvider.overrideWithValue(notifier),
         databaseProvider.overrideWithValue(db),
+        cloudBackupProvider.overrideWithValue(cloud),
+        if (cloud is SupabaseCloudBackup &&
+            SupabaseReceiptVerifier.enabledByBuild)
+          receiptVerifierProvider.overrideWithValue(
+            SupabaseReceiptVerifier(cloud.client, yoruKissa.id),
+          ),
         analyticsProvider.overrideWithValue(
           Analytics([DriftAnalyticsSink(db)]),
         ),
