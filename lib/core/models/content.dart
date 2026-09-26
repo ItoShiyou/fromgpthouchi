@@ -55,7 +55,11 @@ class ItemDef {
     this.price,
     this.source = ItemSource.coin,
     this.icon = '物',
+    this.asset,
   });
+
+  /// BGM・演出の音源（assets/ からの相対パス。例：audio/bgm_rain_piano.wav）。
+  final String? asset;
 
   final String id;
   final String name;
@@ -424,6 +428,7 @@ class TitleContent {
     required this.initialPlacement,
     required this.anonymousWeight,
     required this.visitChancePerTick,
+    required this.defaultBgmAsset,
     this.maxIdle = const Duration(hours: 12),
     this.tick = const Duration(minutes: 5),
   });
@@ -453,6 +458,9 @@ class TitleContent {
   final double visitChancePerTick;
   final Duration maxIdle;
   final Duration tick;
+
+  /// BGM を選んでいない時に流れる「店の物音」。
+  final String defaultBgmAsset;
 
   ItemDef item(String id) => items.firstWhere((e) => e.id == id);
   MenuDef menu(String id) => menus.firstWhere((e) => e.id == id);

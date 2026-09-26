@@ -6,6 +6,7 @@ import '../../core/brand/handdrawn.dart';
 import '../../core/brand/theme.dart';
 import '../../core/engine/ambience.dart';
 import '../../core/models/content.dart';
+import '../../core/services/sound.dart';
 import '../../core/state/game_controller.dart';
 import '../../titles/yoru_kissa/cafe_scene.dart';
 import '../../widgets/common.dart';
@@ -210,7 +211,10 @@ class _Footer extends ConsumerWidget {
         label = '購入して配置 ${yen(item.price!)}';
         action = s.money >= item.price!
             ? () {
-                if (ctrl.buyItem(item.id)) ctrl.place(item.id);
+                if (ctrl.buyItem(item.id)) {
+                  ctrl.place(item.id);
+                  ref.read(soundProvider).play(Se.stamp);
+                }
               }
             : null;
       } else {
@@ -229,7 +233,10 @@ class _Footer extends ConsumerWidget {
       action = () => ctrl.clearSlot(item.slot!);
     } else {
       label = '配置する';
-      action = () => ctrl.place(item.id);
+      action = () {
+        ctrl.place(item.id);
+        ref.read(soundProvider).play(Se.stamp);
+      };
     }
 
     return SizedBox(

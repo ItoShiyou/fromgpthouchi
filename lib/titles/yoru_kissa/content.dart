@@ -28,6 +28,7 @@ const yoruKissa = TitleContent(
   placeName: '喫茶 よはく',
   seed: 20260926,
   initialMoney: 3000,
+  defaultBgmAsset: 'audio/bgm_room.wav',
   anonymousWeight: 2.5,
   visitChancePerTick: 0.17,
   openSlots: {
@@ -210,6 +211,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'bgm_rain_jazz',
+    asset: 'audio/bgm_rain_piano.wav',
     icon: '琴',
     name: 'BGM：雨音とピアノ',
     kind: ItemKind.bgm,
@@ -218,6 +220,7 @@ const _items = <ItemDef>[
   ),
   ItemDef(
     id: 'bgm_midnight_radio',
+    asset: 'audio/bgm_midnight_radio.wav',
     icon: '電',
     name: 'BGM：深夜ラジオ',
     kind: ItemKind.bgm,

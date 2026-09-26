@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/brand/theme.dart';
 import '../../core/models/content.dart';
+import '../../core/services/sound.dart';
 import '../../core/state/game_controller.dart';
 import '../../widgets/common.dart';
 
@@ -80,6 +81,7 @@ class MenuScreen extends ConsumerWidget {
                             onPressed: s.money >= m.unlockCost
                                 ? () {
                                     if (ctrl.unlockMenu(m.id)) {
+                                      ref.read(soundProvider).play(Se.stamp);
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                             SnackBar(

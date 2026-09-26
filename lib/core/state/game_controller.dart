@@ -9,6 +9,7 @@ import '../models/content.dart';
 import '../models/world.dart';
 import '../persistence/save_repository.dart';
 import '../services/event_notifier.dart';
+import '../services/sound.dart';
 import 'game_state.dart';
 
 /// 遊ぶタイトル。第 2 作ではここを差し替える。
@@ -22,6 +23,11 @@ final saveRepositoryProvider = Provider<SaveRepository>(
 /// 出来事の通知。main() で端末用の実装に差し替える。
 final eventNotifierProvider = Provider<EventNotifier>(
   (ref) => const NoopEventNotifier(),
+);
+
+/// 音。main() で実際に鳴らす実装に差し替える（テストでは無音）。
+final soundProvider = Provider<SoundDirector>(
+  (ref) => SoundDirector(const SilentSoundOutput()),
 );
 
 /// 起動時に読み込んだセーブ（無ければ null＝はじめから）。main() で override する。
@@ -246,6 +252,13 @@ class GameController extends Notifier<GameState> {
       ),
     );
     return true;
+  }
+
+  /// 今流すべき BGM の音源。
+  String bgmAsset() {
+    final id = state.activeBgm;
+    return (id == null ? null : _content.item(id).asset) ??
+        _content.defaultBgmAsset;
   }
 
   void setBgm(String? itemId) => _set(state.copyWith(activeBgm: itemId));

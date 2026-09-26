@@ -7,6 +7,7 @@ import '../../core/brand/handdrawn.dart';
 
 import '../../core/brand/theme.dart';
 import '../../core/services/ads.dart';
+import '../../core/services/sound.dart';
 import '../../core/state/game_controller.dart';
 import '../../core/state/purchase_controller.dart';
 import '../../titles/yoru_kissa/cafe_scene.dart';
@@ -49,6 +50,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // ストアが起動時に届け直す購入（中断された支払いなど）を受け取れるようにする
       ref.read(purchaseProvider);
+      _applySound();
       final pending = ref.read(gameProvider).pendingReport;
       ref.read(gameProvider.notifier).catchUp(showReport: true);
       // 前回開いたまま閉じた「おかえりなさい」は、精算しても listen が発火しない。
@@ -71,10 +73,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final ctrl = ref.read(gameProvider.notifier);
     switch (state) {
       case AppLifecycleState.resumed:
+        ref.read(soundProvider).resume();
         ctrl.cancelNotification();
         ctrl.catchUp(showReport: true);
       case AppLifecycleState.paused:
       case AppLifecycleState.hidden:
+        ref.read(soundProvider).pause();
         ctrl.flush();
         ctrl.planNotification();
       default:
@@ -120,14 +124,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _showEvents();
   }
 
-  void _push(Widget page) =>
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+  void _push(Widget page) {
+    ref.read(soundProvider).play(Se.paper);
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+  }
+
+  /// 選んでいる BGM と、設定の音のオン／オフに合わせる。
+  void _applySound() {
+    final s = ref.read(gameProvider);
+    ref
+        .read(soundProvider)
+        .apply(
+          asset: ref.read(gameProvider.notifier).bgmAsset(),
+          bgmOn: s.settings.bgmOn,
+          seOn: s.settings.seOn,
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
     ref.listen(gameProvider.select((s) => s.pendingReport), (prev, next) {
       if (next != null) _showReport();
     });
+    ref.listen(
+      gameProvider.select(
+        (s) => (s.activeBgm, s.settings.bgmOn, s.settings.seOn),
+      ),
+      (prev, next) => _applySound(),
+    );
     ref.listen(eventQueueProvider, (prev, next) {
       if (next.isNotEmpty) _showEvents();
     });
@@ -222,6 +246,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           ? null
                           : () {
                               final got = ctrl.collectRegister();
+                              ref.read(soundProvider).play(Se.coin);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('${yen(got)} を回収しました')),
                               );
@@ -283,6 +308,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final content = ref.read(contentProvider);
     final guest = ctrl.collectGuest(index);
     if (guest == null) return;
+    ref.read(soundProvider).play(Se.coin);
     final id = guest.visit.visitorId;
     final def = id == null ? null : content.visitor(id);
     final rec = id == null ? null : ref.read(gameProvider).visitors[id];

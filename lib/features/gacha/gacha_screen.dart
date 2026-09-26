@@ -8,6 +8,7 @@ import '../../core/brand/handdrawn.dart';
 import '../../core/brand/theme.dart';
 import '../../core/engine/gacha_engine.dart';
 import '../../core/models/content.dart';
+import '../../core/services/sound.dart';
 import '../../core/state/game_controller.dart';
 import '../../widgets/common.dart';
 import '../shop/shop_screen.dart';
@@ -235,6 +236,7 @@ class _GachaScreenState extends ConsumerState<GachaScreen>
   Future<void> _draw(int times) async {
     final out = ref.read(gameProvider.notifier).drawGacha(times);
     if (out == null) return;
+    ref.read(soundProvider).play(Se.gacha);
     await _shake.forward(from: 0);
     if (!mounted) return;
     final c = ref.read(contentProvider);
