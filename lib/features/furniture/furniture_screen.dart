@@ -173,11 +173,11 @@ class _ItemCell extends StatelessWidget {
             ],
           ),
           if (inUse)
-            const Positioned(
+            Positioned(
               top: -2,
               right: -2,
-              child: Icon(
-                Icons.check_circle,
+              child: SketchIcon(
+                Sketch.check,
                 size: 16,
                 color: YohakuColors.wood,
               ),

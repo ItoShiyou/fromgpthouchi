@@ -378,3 +378,145 @@ class _BrushPainter extends CustomPainter {
   @override
   bool shouldRepaint(_BrushPainter old) => old.color != color;
 }
+
+enum Sketch {
+  back,
+  forward,
+  close,
+  check,
+  plus,
+  coin,
+  ticket,
+  gear,
+  upload,
+  book,
+}
+
+/// 手描きの小さなアイコン。Material の既製アイコンの代わりに使う。
+class SketchIcon extends StatelessWidget {
+  const SketchIcon(
+    this.kind, {
+    super.key,
+    this.size = 24,
+    this.color = YohakuColors.ink,
+  });
+
+  final Sketch kind;
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: size,
+    height: size,
+    child: CustomPaint(painter: _SketchPainter(kind, color)),
+  );
+}
+
+class _SketchPainter extends CustomPainter {
+  _SketchPainter(this.kind, this.color);
+
+  final Sketch kind;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.shortestSide;
+    Offset p(double x, double y) => Offset(x * s, y * s);
+    final w = math.max(1.3, s * 0.085);
+    void stroke(Path path) => Rough.ink(
+      canvas,
+      Rough.wobble(path, amount: s * 0.02, seed: s + kind.index),
+      color: color,
+      width: w,
+    );
+    Path poly(List<Offset> pts) {
+      final path = Path()..moveTo(pts.first.dx, pts.first.dy);
+      for (final o in pts.skip(1)) {
+        path.lineTo(o.dx, o.dy);
+      }
+      return path;
+    }
+
+    switch (kind) {
+      case Sketch.back:
+        stroke(poly([p(0.62, 0.2), p(0.34, 0.5), p(0.63, 0.8)]));
+      case Sketch.forward:
+        stroke(poly([p(0.38, 0.2), p(0.66, 0.5), p(0.37, 0.8)]));
+      case Sketch.close:
+        stroke(poly([p(0.25, 0.24), p(0.76, 0.77)]));
+        stroke(poly([p(0.74, 0.23), p(0.26, 0.76)]));
+      case Sketch.check:
+        stroke(poly([p(0.2, 0.52), p(0.42, 0.74), p(0.82, 0.24)]));
+      case Sketch.plus:
+        stroke(
+          Path()
+            ..addOval(Rect.fromCircle(center: p(0.5, 0.5), radius: s * 0.4)),
+        );
+        stroke(poly([p(0.5, 0.3), p(0.5, 0.7)]));
+        stroke(poly([p(0.3, 0.5), p(0.7, 0.5)]));
+      case Sketch.coin:
+        final c = Rect.fromCircle(center: p(0.5, 0.5), radius: s * 0.4);
+        canvas.drawPath(
+          Rough.oval(c, amount: s * 0.02, seed: 3),
+          Paint()..color = YohakuColors.lamp,
+        );
+        stroke(Path()..addOval(c));
+        stroke(poly([p(0.37, 0.32), p(0.5, 0.5), p(0.63, 0.32)]));
+        stroke(poly([p(0.5, 0.5), p(0.5, 0.72)]));
+        stroke(poly([p(0.38, 0.55), p(0.62, 0.55)]));
+      case Sketch.ticket:
+        final r = Rect.fromLTRB(0.12 * s, 0.28 * s, 0.88 * s, 0.72 * s);
+        canvas.drawPath(
+          Rough.rrect(r, s * 0.06, amount: s * 0.02, seed: 5),
+          Paint()..color = const Color(0xFF9FC3CF),
+        );
+        stroke(
+          Path()
+            ..addRRect(RRect.fromRectAndRadius(r, Radius.circular(s * 0.06))),
+        );
+        for (var y = 0.34; y < 0.7; y += 0.1) {
+          canvas.drawCircle(p(0.34, y), s * 0.02, Paint()..color = color);
+        }
+      case Sketch.gear:
+        stroke(
+          Path()
+            ..addOval(Rect.fromCircle(center: p(0.5, 0.5), radius: s * 0.24)),
+        );
+        stroke(
+          Path()
+            ..addOval(Rect.fromCircle(center: p(0.5, 0.5), radius: s * 0.08)),
+        );
+        for (var i = 0; i < 8; i++) {
+          final a = i * math.pi / 4;
+          stroke(
+            poly([
+              p(0.5 + math.cos(a) * 0.26, 0.5 + math.sin(a) * 0.26),
+              p(0.5 + math.cos(a) * 0.4, 0.5 + math.sin(a) * 0.4),
+            ]),
+          );
+        }
+      case Sketch.upload:
+        stroke(poly([p(0.2, 0.62), p(0.2, 0.8), p(0.8, 0.8), p(0.8, 0.62)]));
+        stroke(poly([p(0.5, 0.66), p(0.5, 0.2)]));
+        stroke(poly([p(0.33, 0.36), p(0.5, 0.2), p(0.67, 0.36)]));
+      case Sketch.book:
+        stroke(poly([p(0.5, 0.26), p(0.5, 0.8)]));
+        stroke(
+          poly([
+            p(0.5, 0.26),
+            p(0.14, 0.2),
+            p(0.14, 0.74),
+            p(0.5, 0.8),
+            p(0.86, 0.74),
+            p(0.86, 0.2),
+            p(0.5, 0.26),
+          ]),
+        );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SketchPainter old) =>
+      old.kind != kind || old.color != color;
+}

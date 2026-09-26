@@ -165,7 +165,7 @@ class CafePainter extends CustomPainter {
                 text: 'MENU\n',
                 style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 2),
               ),
-              TextSpan(text: 'コーヒー 450\nプリン 400\nパスタ 850'),
+              TextSpan(text: 'ブレンド 450\nナポリタン 850\nプリン 400'),
             ],
           ),
           textAlign: TextAlign.center,
@@ -179,9 +179,9 @@ class CafePainter extends CustomPainter {
           ),
         );
       }
-      // 部屋の天井電球のコード
+      // 部屋の天井電球のコード（黒板の裏を通して、下から出す）
       canvas.drawLine(
-        Offset(w * 0.5, ceiling),
+        Offset(w * 0.5, board.height > 40 ? board.bottom + 4 : ceiling),
         Offset(w * 0.5, top),
         Paint()
           ..color = const Color(0xFF2B2A33)

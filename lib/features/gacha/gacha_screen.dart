@@ -47,187 +47,187 @@ class _GachaScreenState extends ConsumerState<GachaScreen>
     final complete = ownedInPool == g.entries.length;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment(0, -0.2),
-            radius: 1.0,
-            colors: [Color(0xFF9A6A43), Color(0xFF4A2F1C), Color(0xFF2A1A10)],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              SizedBox(
-                height: 56,
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.chevron_left,
-                        size: 30,
-                        color: YohakuColors.paper,
-                      ),
-                      onPressed: () => Navigator.of(context).maybePop(),
-                    ),
-                    Expanded(
-                      child: Text(
-                        g.name,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2,
+      backgroundColor: const Color(0xFF3E2819),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: PaperGrain(dark: true, opacity: 1.3)),
+          SafeArea(
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 56,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const SketchIcon(
+                          Sketch.back,
+                          size: 30,
                           color: YohakuColors.paper,
                         ),
+                        onPressed: () => Navigator.of(context).maybePop(),
+                      ),
+                      Expanded(
+                        child: Text(
+                          g.name,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2,
+                            color: YohakuColors.paper,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 48),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
+                  decoration: ShapeDecoration(
+                    color: YohakuColors.paper,
+                    shape: RoughBorder(radius: 20),
+                  ),
+                  child: Text(
+                    '集めた $ownedInPool / ${g.entries.length}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: AnimatedBuilder(
+                      animation: _shake,
+                      builder: (context, child) => Transform.rotate(
+                        angle:
+                            math.sin(_shake.value * math.pi * 8) *
+                            0.04 *
+                            (1 - _shake.value),
+                        child: child,
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 0.8,
+                        child: CustomPaint(
+                          painter: _MachinePainter(knob: _shake),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 48),
-                  ],
+                  ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 6,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _DrawButton(
+                          times: 1,
+                          enabled: s.tickets >= 1,
+                          onTap: () => _draw(1),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _DrawButton(
+                          times: 10,
+                          enabled: s.tickets >= 10,
+                          onTap: () => _draw(10),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                decoration: ShapeDecoration(
-                  color: YohakuColors.paper,
-                  shape: RoughBorder(radius: 20),
-                ),
-                child: Text(
-                  '集めた $ownedInPool / ${g.entries.length}',
+                const SizedBox(height: 10),
+                Text(
+                  complete
+                      ? 'すべて集まりました'
+                      : 'あと ${g.pityCount - s.gachaPity} 回のうちに、まだ持っていないものが必ず出ます',
                   style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    color: YohakuColors.cream,
                   ),
                 ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: AnimatedBuilder(
-                    animation: _shake,
-                    builder: (context, child) => Transform.rotate(
-                      angle:
-                          math.sin(_shake.value * math.pi * 8) *
-                          0.04 *
-                          (1 - _shake.value),
-                      child: child,
-                    ),
-                    child: AspectRatio(
-                      aspectRatio: 0.8,
-                      child: CustomPaint(
-                        painter: _MachinePainter(knob: _shake),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _DrawButton(
-                        times: 1,
-                        enabled: s.tickets >= 1,
-                        onTap: () => _draw(1),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _DrawButton(
-                        times: 10,
-                        enabled: s.tickets >= 10,
-                        onTap: () => _draw(10),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                complete
-                    ? 'すべて集まりました'
-                    : '${g.pityCount} 回目は必ず未所持アイテムが出ます（あと ${g.pityCount - s.gachaPity} 回）',
-                style: const TextStyle(fontSize: 12, color: YohakuColors.cream),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: ShapeDecoration(
-                          color: const Color(0x66000000),
-                          shape: RoughBorder(radius: 20),
-                        ),
-                        child: Row(
-                          children: [
-                            const Text(
-                              '所持チケット',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: YohakuColors.paper,
-                              ),
-                            ),
-                            const Spacer(),
-                            const Icon(
-                              Icons.confirmation_number,
-                              size: 16,
-                              color: Color(0xFF8EC5E8),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${s.tickets}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                color: YohakuColors.paper,
-                              ),
-                            ),
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              tooltip: 'チケットを手に入れる',
-                              icon: const Icon(
-                                Icons.add_circle,
-                                color: YohakuColors.lamp,
-                                size: 20,
-                              ),
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => const ShopScreen(),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: ShapeDecoration(
+                            color: const Color(0x66000000),
+                            shape: RoughBorder(radius: 20),
+                          ),
+                          child: Row(
+                            children: [
+                              const Text(
+                                '所持チケット',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: YohakuColors.paper,
                                 ),
                               ),
-                            ),
-                          ],
+                              const Spacer(),
+                              const SketchIcon(
+                                Sketch.ticket,
+                                size: 16,
+                                color: Color(0xFF8EC5E8),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${s.tickets}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: YohakuColors.paper,
+                                ),
+                              ),
+                              IconButton(
+                                visualDensity: VisualDensity.compact,
+                                tooltip: 'チケットを手に入れる',
+                                icon: const SketchIcon(
+                                  Sketch.plus,
+                                  color: YohakuColors.lamp,
+                                  size: 20,
+                                ),
+                                onPressed: () => Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => const ShopScreen(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      height: 40,
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: YohakuColors.paper,
-                          foregroundColor: YohakuColors.ink,
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        height: 40,
+                        child: FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: YohakuColors.paper,
+                            foregroundColor: YohakuColors.ink,
+                          ),
+                          onPressed: () => _showRates(context, c.gacha, c),
+                          child: const Text('提供割合'),
                         ),
-                        onPressed: () => _showRates(context, c.gacha, c),
-                        child: const Text('提供割合'),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -322,8 +322,8 @@ class _GachaScreenState extends ConsumerState<GachaScreen>
                       ),
                     ),
                     if (s.ownedItems.contains(e.itemId))
-                      const Icon(
-                        Icons.check,
+                      const SketchIcon(
+                        Sketch.check,
                         size: 14,
                         color: YohakuColors.moss,
                       ),
@@ -408,8 +408,8 @@ class _DrawButton extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.confirmation_number,
+                      const SketchIcon(
+                        Sketch.ticket,
                         size: 14,
                         color: Color(0xFF5E9CC7),
                       ),
@@ -598,13 +598,11 @@ class _MachinePainter extends CustomPainter {
       }
     }
     canvas.restore();
-    canvas.drawCircle(
-      dome,
-      r,
-      Paint()
-        ..color = const Color(0xFFF3EBDD)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3,
+    Rough.ink(
+      canvas,
+      Rough.oval(Rect.fromCircle(center: dome, radius: r), amount: 1.6),
+      color: const Color(0xFF1E140E),
+      width: 2.4,
     );
     canvas.drawArc(
       Rect.fromCircle(center: dome, radius: r * 0.82),
@@ -629,6 +627,65 @@ class _MachinePainter extends CustomPainter {
       ),
       Paint()..color = const Color(0xFFB2322C),
     );
+    _linework(canvas, size, dome, r);
+  }
+
+  /// 塗りの上にインクの輪郭。
+  void _linework(Canvas canvas, Size size, Offset dome, double r) {
+    final w = size.width, h = size.height, cx = w / 2;
+    const ink = Color(0xFF1E140E);
+    void line(Path p, [double width = 2.2]) =>
+        Rough.ink(canvas, p, color: ink, width: width);
+    line(
+      Rough.rrect(
+        Rect.fromLTRB(w * 0.2, h * 0.55, w * 0.8, h * 0.95),
+        w * 0.06,
+        amount: 1.4,
+      ),
+    );
+    line(Rough.rrect(Rect.fromLTRB(w * 0.18, h * 0.53, w * 0.82, h * 0.58), 2));
+    line(
+      Rough.oval(
+        Rect.fromCircle(center: Offset(cx, h * 0.72), radius: w * 0.1),
+      ),
+      1.8,
+    );
+    line(
+      Rough.rrect(
+        Rect.fromCenter(
+          center: Offset(cx, h * 0.87),
+          width: w * 0.2,
+          height: h * 0.07,
+        ),
+        8,
+      ),
+      1.8,
+    );
+    line(
+      Rough.rrect(
+        Rect.fromCenter(
+          center: Offset(cx, dome.dy - r),
+          width: w * 0.2,
+          height: h * 0.04,
+        ),
+        6,
+      ),
+      1.8,
+    );
+    // 台の木目のような縦の擦れ
+    for (var i = 0; i < 5; i++) {
+      final x = w * (0.28 + i * 0.1);
+      Rough.ink(
+        canvas,
+        Rough.line(
+          Offset(x, h * 0.62),
+          Offset(x + 2, h * 0.64 + (i % 2) * h * 0.03),
+        ),
+        color: ink,
+        width: 1,
+        opacity: 0.3,
+      );
+    }
   }
 
   @override

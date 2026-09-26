@@ -167,17 +167,19 @@ class _CoinBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: ShapeDecoration(
         color: YohakuColors.paper,
+        // 顔なじみ（図鑑に載る人）は枠を濃くするだけ。記号は付けない。
         shape: RoughBorder(
           radius: 10,
-          side: BorderSide(color: YohakuColors.lamp, width: 1.5),
+          side: BorderSide(
+            color: named ? YohakuColors.wood : YohakuColors.lamp,
+            width: named ? 2 : 1.5,
+          ),
         ),
         shadows: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (named)
-            const Icon(Icons.auto_awesome, size: 10, color: YohakuColors.lamp),
           Text(
             yen(bill),
             style: const TextStyle(

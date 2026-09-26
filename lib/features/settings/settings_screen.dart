@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/brand/handdrawn.dart';
+
 import '../../core/brand/theme.dart';
 import '../../core/models/world.dart';
 import '../../core/state/game_controller.dart';
@@ -67,8 +69,8 @@ class SettingsScreen extends ConsumerWidget {
           const SectionTitle('データ'),
           group([
             ListTile(
-              leading: const Icon(
-                Icons.cloud_upload_outlined,
+              leading: const SketchIcon(
+                Sketch.upload,
                 color: YohakuColors.wood,
               ),
               title: const Text('バックアップ'),
@@ -84,12 +86,9 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const Icon(
-                Icons.collections_bookmark_outlined,
-                color: YohakuColors.wood,
-              ),
+              leading: const SketchIcon(Sketch.book, color: YohakuColors.wood),
               title: const Text('まちの余白 シリーズ'),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: const SketchIcon(Sketch.forward, size: 20),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(builder: (_) => const SeriesScreen()),
               ),

@@ -156,20 +156,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         '${m.time.hour.toString().padLeft(2, '0')}:${m.time.minute.toString().padLeft(2, '0')}  ${m.slot.label}・${m.weather.label}',
                   ),
                   const Spacer(),
-                  _HudPill(
-                    icon: Icons.monetization_on,
-                    color: YohakuColors.lamp,
-                    label: yen(s.money).substring(1),
-                  ),
+                  _HudPill(icon: Sketch.coin, label: yen(s.money).substring(1)),
                   const SizedBox(width: 6),
-                  _HudPill(
-                    icon: Icons.confirmation_number,
-                    color: const Color(0xFF8EC5E8),
-                    label: '${s.tickets}',
-                  ),
+                  _HudPill(icon: Sketch.ticket, label: '${s.tickets}'),
                   IconButton(
                     tooltip: '設定',
-                    icon: const Icon(Icons.settings, color: YohakuColors.paper),
+                    icon: const SketchIcon(
+                      Sketch.gear,
+                      color: YohakuColors.paper,
+                      size: 26,
+                    ),
                     onPressed: () => _push(const SettingsScreen()),
                   ),
                 ],
@@ -221,32 +217,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     Row(
                       children: [
                         _BarButton(
-                          icon: Icons.people_alt_outlined,
+                          glyph: '客',
                           label: 'お客様',
                           onTap: () => _push(const VisitorListScreen()),
                         ),
                         _BarButton(
-                          icon: Icons.menu_book_outlined,
+                          glyph: '鑑',
                           label: '図鑑',
                           onTap: () => _push(const ZukanScreen()),
                         ),
                         _BarButton(
-                          icon: Icons.chair_outlined,
+                          glyph: '具',
                           label: '家具',
                           onTap: () => _push(const FurnitureScreen()),
                         ),
                         _BarButton(
-                          icon: Icons.local_cafe_outlined,
+                          glyph: '品',
                           label: 'メニュー',
                           onTap: () => _push(const MenuScreen()),
                         ),
                         _BarButton(
-                          icon: Icons.redeem_outlined,
+                          glyph: '籤',
                           label: 'くじ',
                           onTap: () => _push(const GachaScreen()),
                         ),
                         _BarButton(
-                          icon: Icons.shopping_bag_outlined,
+                          glyph: '店',
                           label: 'ショップ',
                           onTap: () => _push(const ShopScreen()),
                         ),
@@ -378,7 +374,7 @@ class _LevelCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.storefront, size: 14, color: YohakuColors.lamp),
+              const InkGlyph('店', size: 18, color: YohakuColors.lamp),
               const SizedBox(width: 4),
               Text(
                 'Lv.${level.level}',
@@ -408,14 +404,9 @@ class _LevelCard extends StatelessWidget {
 }
 
 class _HudPill extends StatelessWidget {
-  const _HudPill({
-    required this.icon,
-    required this.color,
-    required this.label,
-  });
+  const _HudPill({required this.icon, required this.label});
 
-  final IconData icon;
-  final Color color;
+  final Sketch icon;
   final String label;
 
   @override
@@ -430,7 +421,7 @@ class _HudPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: color),
+          SketchIcon(icon, size: 20, color: const Color(0xFF2A1B12)),
           const SizedBox(width: 4),
           Text(
             label,
@@ -491,7 +482,7 @@ class _RegisterBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.point_of_sale, color: YohakuColors.wood, size: 22),
+          const InkGlyph('会', size: 30, color: YohakuColors.wood),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -523,12 +514,12 @@ class _RegisterBar extends StatelessWidget {
 
 class _BarButton extends StatelessWidget {
   const _BarButton({
-    required this.icon,
+    required this.glyph,
     required this.label,
     required this.onTap,
   });
 
-  final IconData icon;
+  final String glyph;
   final String label;
   final VoidCallback onTap;
 
@@ -550,7 +541,7 @@ class _BarButton extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, color: YohakuColors.cream, size: 24),
+                  InkGlyph(glyph, size: 30, color: YohakuColors.cream),
                   const SizedBox(height: 3),
                   Text(
                     label,

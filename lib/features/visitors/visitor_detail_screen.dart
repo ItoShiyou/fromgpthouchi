@@ -106,8 +106,8 @@ class _VisitorDetailScreenState extends ConsumerState<VisitorDetailScreen> {
                         right: 4,
                         top: 4,
                         child: IconButton(
-                          icon: const Icon(
-                            Icons.close,
+                          icon: const SketchIcon(
+                            Sketch.close,
                             color: YohakuColors.paper,
                           ),
                           onPressed: () => Navigator.of(context).maybePop(),

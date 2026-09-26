@@ -75,8 +75,8 @@ class _PaperPageState extends State<PaperPage> {
                           child: Row(
                             children: [
                               IconButton(
-                                icon: const Icon(
-                                  Icons.chevron_left,
+                                icon: const SketchIcon(
+                                  Sketch.back,
                                   size: 30,
                                   color: YohakuColors.ink,
                                 ),
@@ -92,8 +92,8 @@ class _PaperPageState extends State<PaperPage> {
                               ),
                               if (widget.showClose)
                                 IconButton(
-                                  icon: const Icon(
-                                    Icons.close,
+                                  icon: const SketchIcon(
+                                    Sketch.close,
                                     color: YohakuColors.inkDim,
                                   ),
                                   onPressed: () =>

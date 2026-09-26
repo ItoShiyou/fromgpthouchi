@@ -62,7 +62,10 @@ class _TitleScreenState extends State<TitleScreen>
                 Align(
                   alignment: Alignment.topRight,
                   child: IconButton(
-                    icon: const Icon(Icons.settings, color: YohakuColors.paper),
+                    icon: const SketchIcon(
+                      Sketch.gear,
+                      color: YohakuColors.paper,
+                    ),
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const SettingsScreen(),
